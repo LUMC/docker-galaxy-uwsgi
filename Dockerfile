@@ -23,7 +23,8 @@ FROM debian:buster-slim
 MAINTAINER r.h.p.vorderman@lumc.nl
 
 ENV GALAXY_VERSION=19.05 \
-GALAXY_INSTALL_DIR=/opt/galaxy
+GALAXY_INSTALL_DIR=/opt/galaxy \
+GALAXY_UID=1450
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
 python \
@@ -47,6 +48,10 @@ RUN bash -c 'pip install --no-cache-dir \
  -r <(grep -v mysql lib/galaxy/dependencies/conditional-requirements.txt ) \
 --index-url https://wheels.galaxyproject.org/simple \
 --extra-index-url https://pypi.python.org/simple'
+
+RUN useradd --home-dir /home/galaxy --create-home \
+--shell /bin/bash --uid ${GALAXY_UID} galaxy && \
+chown galaxy:galaxy $GALAXY_INSTALL_DIR
 
 EXPOSE 8080
 
