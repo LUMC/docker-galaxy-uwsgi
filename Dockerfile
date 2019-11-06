@@ -29,8 +29,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 python \
 python-pip \
 python-setuptools \
-uwsgi \
-uwsgi-plugin-python \
 git \
 && \
 git clone --depth=1 -b release_${GALAXY_VERSION} \
@@ -50,6 +48,7 @@ RUN bash -c 'pip install --no-cache-dir \
 --index-url https://wheels.galaxyproject.org/simple \
 --extra-index-url https://pypi.python.org/simple'
 
+EXPOSE 8080
 
 
 
