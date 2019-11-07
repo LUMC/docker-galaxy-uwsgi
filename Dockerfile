@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-FROM debian:buster
+FROM debian:buster-slim
 
 MAINTAINER r.h.p.vorderman@lumc.nl
 
@@ -75,5 +75,8 @@ RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
 --index-url https://wheels.galaxyproject.org/simple \
 --extra-index-url https://pypi.python.org/simple"
 
+ADD ./entrypoint.sh entrypoint.sh
 
 EXPOSE 8080
+
+CMD ["entrypoint.sh"]
