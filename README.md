@@ -35,4 +35,18 @@ Startup times for galaxy-uwsgi are very fast because of this. This
 makes it ideal for use in docker swarm setups or for test cases where
 a quick ready to use instance of galaxy is needed.
 
+## Acknowledgements
+
+Many thanks to [@bgruening](https://github.com/bgruening) as his
+container was used as an example a lot to get a lot of the installation 
+tricks right.
+
+Many thanks as well to the maintainers of [ansible-galaxy-extras](
+https://github.com/galaxyproject/ansible-galaxy-extras) for the same 
+reason.
+
+And last but not least many thanks to the maintainers of the [Galaxy
+documentation](https://docs.galaxyproject.org). It is extraordinaly
+good documentation.
+
 
