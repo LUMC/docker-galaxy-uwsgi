@@ -24,13 +24,15 @@ MAINTAINER r.h.p.vorderman@lumc.nl
 
 ARG GALAXY_RELEASE
 ENV GALAXY_VERSION=${GALAXY_RELEASE:-19.05} \
-GALAXY_INSTALL_DIR=/opt/galaxy \
-GALAXY_UID=1450 \
-GALAXY_USER=galaxy \
-GALAXY_HOME=/home/galaxy \
-GALAXY_LOGS_DIR=/home/galaxy/logs \
-GALAXY_VIRTUAL_ENV=/galaxy_venv \
-GALAXY_CONFIG_CONDA_PREFIX=/conda
+    GALAXY_INSTALL_DIR=/opt/galaxy \
+    GALAXY_UID=1450 \
+    GALAXY_USER=galaxy \
+    GALAXY_HOME=/home/galaxy \
+    GALAXY_LOGS_DIR=/home/galaxy/logs \
+    GALAXY_VIRTUAL_ENV=/galaxy_venv \
+    GALAXY_CONFIG_CONDA_PREFIX=/conda \
+    UWSGI_PROCESSES=2 \
+    UWSGI_THREADS=4
 
 # Create the galaxy user.
 RUN useradd --home-dir /home/galaxy --create-home \
