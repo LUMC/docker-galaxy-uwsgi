@@ -32,15 +32,18 @@ GALAXY_LOGS_DIR=/home/galaxy/logs \
 GALAXY_VIRTUAL_ENV=/galaxy_venv \
 GALAXY_CONFIG_CONDA_PREFIX=/conda
 
+# Create the galaxy user.
 RUN useradd --home-dir /home/galaxy --create-home \
 --shell /bin/bash --uid ${GALAXY_UID} galaxy
 
+# Make sure all necessary folders are present and owned by the galaxy user.
 RUN mkdir -p $GALAXY_VIRTUAL_ENV $GALAXY_LOGS_DIR $GALAXY_CONFIG_CONDA_PREFIX $GALAXY_INSTALL_DIR \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_VIRTUAL_ENV \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_LOGS_DIR \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_CONFIG_CONDA_PREFIX \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_INSTALL_DIR
 
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
@@ -51,6 +54,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 USER $GALAXY_USER
 
+# Clone galaxy to the install dir.
 RUN git clone --depth=1 -b release_${GALAXY_VERSION} \
 --separate-git-dir=/tmp/galaxy.git \
 https://github.com/galaxyproject/galaxy.git $GALAXY_INSTALL_DIR \
@@ -58,6 +62,7 @@ https://github.com/galaxyproject/galaxy.git $GALAXY_INSTALL_DIR \
 
 WORKDIR ${GALAXY_INSTALL_DIR}
 
+# Install Conda and create a virtualenv
 RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_64.sh > $GALAXY_HOME/miniconda.sh \
     && bash $GALAXY_HOME/miniconda.sh -u -b -p $GALAXY_CONFIG_CONDA_PREFIX/ \
     && rm $GALAXY_HOME/miniconda.sh \
@@ -69,6 +74,7 @@ RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_6
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
     && rm -rf $GALAXY_HOME/.cache/pip
 
+# Populate default environment with all of galaxy's dependencies
 RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
     -r requirements.txt \
     -r <(grep -v mysql lib/galaxy/dependencies/conditional-requirements.txt ) \
@@ -76,6 +82,7 @@ RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
     --extra-index-url https://pypi.python.org/simple" \
     && rm -rf $GALAXY_VIRTUAL_ENV/src
 
+# Make sure config files are present
 RUN cp config/migrated_tools_conf.xml.sample config/migrated_tools_conf.xml \
     && cp config/shed_tool_conf.xml.sample config/shed_tool_conf.xml \
     && cp config/shed_tool_data_table_conf.xml.sample config/shed_tool_data_table_conf.xml \
@@ -84,6 +91,7 @@ RUN cp config/migrated_tools_conf.xml.sample config/migrated_tools_conf.xml \
     && cp tool-data/shared/ucsc/manual_builds.txt.sample tool-data/shared/ucsc/manual_builds.txt \
     && cp static/welcome.html.sample static/welcome.html
 
+# Build the galaxy client
 RUN bash -c "source $GALAXY_VIRTUAL_ENV/bin/activate \
     && $GALAXY_VIRTUAL_ENV/bin/nodeenv -n $(cat client/.node_version) -p \
     && $GALAXY_VIRTUAL_ENV/bin/npm install --global yarn \
@@ -91,6 +99,9 @@ RUN bash -c "source $GALAXY_VIRTUAL_ENV/bin/activate \
     && $GALAXY_VIRTUAL_ENV/bin/yarn install --network-timeout 300000 --check-files \
     && $GALAXY_VIRTUAL_ENV/bin/yarn run build-production-maps " \
     && rm -rf /tmp/* $GALAXY_HOME/.cache/* $GALAXY_HOME/.npm client/node_modules*
+
+# Create the database. This only adds 3 mb to the container while drastically reducing start time.
+RUN bash create_db.sh
 
 ADD ./entrypoint.sh /usr/bin/entrypoint.sh
 
