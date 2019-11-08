@@ -42,23 +42,21 @@ RUN mkdir -p $GALAXY_VIRTUAL_ENV $GALAXY_LOGS_DIR $GALAXY_CONFIG_CONDA_PREFIX $G
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_INSTALL_DIR
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-git \
-curl \
-ca-certificates \
-&& \
-runuser -u galaxy -p -- \
-git clone --depth=1 -b release_${GALAXY_VERSION} \
---separate-git-dir=/tmp/galaxy.git \
-https://github.com/galaxyproject/galaxy.git $GALAXY_INSTALL_DIR \
-&& rm $GALAXY_INSTALL_DIR/.git %% rm -rf /tmp/galaxy.git \
-&& \
-apt-get purge -y git && \
-apt-get autoremove -y && \
-apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-WORKDIR ${GALAXY_INSTALL_DIR}
+    git \
+    curl \
+    ca-certificates \
+    bzip2 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 USER $GALAXY_USER
+
+RUN git clone --depth=1 -b release_${GALAXY_VERSION} \
+--separate-git-dir=/tmp/galaxy.git \
+https://github.com/galaxyproject/galaxy.git $GALAXY_INSTALL_DIR \
+&& rm $GALAXY_INSTALL_DIR/.git %% rm -rf /tmp/galaxy.git
+
+WORKDIR ${GALAXY_INSTALL_DIR}
 
 RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_64.sh > $GALAXY_HOME/miniconda.sh \
     && bash $GALAXY_HOME/miniconda.sh -u -b -p $GALAXY_CONFIG_CONDA_PREFIX/ \
@@ -71,10 +69,10 @@ RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_6
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV
 
 RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
- -r requirements.txt \
- -r <(grep -v mysql lib/galaxy/dependencies/conditional-requirements.txt ) \
---index-url https://wheels.galaxyproject.org/simple \
---extra-index-url https://pypi.python.org/simple"
+    -r requirements.txt \
+    -r <(grep -v mysql lib/galaxy/dependencies/conditional-requirements.txt ) \
+    --index-url https://wheels.galaxyproject.org/simple \
+    --extra-index-url https://pypi.python.org/simple"
 
 RUN cp config/migrated_tools_conf.xml.sample config/migrated_tools_conf.xml \
     && cp config/shed_tool_conf.xml.sample config/shed_tool_conf.xml \
@@ -83,6 +81,14 @@ RUN cp config/migrated_tools_conf.xml.sample config/migrated_tools_conf.xml \
     && cp tool-data/shared/ucsc/builds.txt.sample tool-data/shared/ucsc/builds.txt \
     && cp tool-data/shared/ucsc/manual_builds.txt.sample tool-data/shared/ucsc/manual_builds.txt \
     && cp static/welcome.html.sample static/welcome.html
+
+RUN bash -c "source $GALAXY_VIRTUAL_ENV/bin/activate \
+    && $GALAXY_VIRTUAL_ENV/bin/nodeenv -n $(cat client/.node_version) -p \
+    && $GALAXY_VIRTUAL_ENV/bin/npm install --global yarn \
+    && cd client \
+    && $GALAXY_VIRTUAL_ENV/bin/yarn install --network-timeout 300000 --check-files \
+    && $GALAXY_VIRTUAL_ENV/bin/yarn run build-production-maps " \
+    && rm -rf /tmp/*
 
 ADD ./entrypoint.sh /usr/bin/entrypoint.sh
 
