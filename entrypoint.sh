@@ -11,4 +11,7 @@ $GALAXY_VIRTUAL_ENV/bin/uwsgi \
   --pythonpath lib \
   --virtualenv $GALAXY_VIRTUAL_ENV \
   --module 'galaxy.webapps.galaxy.buildapp:uwsgi_app()' \
-  -b 16384
+  -b 16384 \
+  --enable-threads \
+  --die-on-term \
+  --yaml config/galaxy.yml

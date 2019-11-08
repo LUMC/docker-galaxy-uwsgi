@@ -82,15 +82,6 @@ RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
     --extra-index-url https://pypi.python.org/simple" \
     && rm -rf $GALAXY_VIRTUAL_ENV/src
 
-# Make sure config files are present
-RUN cp config/migrated_tools_conf.xml.sample config/migrated_tools_conf.xml \
-    && cp config/shed_tool_conf.xml.sample config/shed_tool_conf.xml \
-    && cp config/shed_tool_data_table_conf.xml.sample config/shed_tool_data_table_conf.xml \
-    && cp config/shed_data_manager_conf.xml.sample config/shed_data_manager_conf.xml \
-    && cp tool-data/shared/ucsc/builds.txt.sample tool-data/shared/ucsc/builds.txt \
-    && cp tool-data/shared/ucsc/manual_builds.txt.sample tool-data/shared/ucsc/manual_builds.txt \
-    && cp static/welcome.html.sample static/welcome.html
-
 # Build the galaxy client
 RUN bash -c "source $GALAXY_VIRTUAL_ENV/bin/activate \
     && $GALAXY_VIRTUAL_ENV/bin/nodeenv -n $(cat client/.node_version) -p \
@@ -102,6 +93,17 @@ RUN bash -c "source $GALAXY_VIRTUAL_ENV/bin/activate \
 
 # Create the database. This only adds 3 mb to the container while drastically reducing start time.
 RUN bash create_db.sh
+
+# Make sure config files are present
+RUN cp config/migrated_tools_conf.xml.sample config/migrated_tools_conf.xml \
+    && cp config/shed_tool_conf.xml.sample config/shed_tool_conf.xml \
+    && cp config/shed_tool_data_table_conf.xml.sample config/shed_tool_data_table_conf.xml \
+    && cp config/shed_data_manager_conf.xml.sample config/shed_data_manager_conf.xml \
+    && cp tool-data/shared/ucsc/builds.txt.sample tool-data/shared/ucsc/builds.txt \
+    && cp tool-data/shared/ucsc/manual_builds.txt.sample tool-data/shared/ucsc/manual_builds.txt \
+    && cp static/welcome.html.sample static/welcome.html
+
+ADD galaxy.yml config/galaxy.yml
 
 ADD ./entrypoint.sh /usr/bin/entrypoint.sh
 
