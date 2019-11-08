@@ -30,15 +30,15 @@ GALAXY_USER=galaxy \
 GALAXY_HOME=/home/galaxy \
 GALAXY_LOGS_DIR=/home/galaxy/logs \
 GALAXY_VIRTUAL_ENV=/galaxy_venv \
-GALAXY_CONDA_PREFIX=/conda
+GALAXY_CONFIG_CONDA_PREFIX=/conda
 
 RUN useradd --home-dir /home/galaxy --create-home \
 --shell /bin/bash --uid ${GALAXY_UID} galaxy
 
-RUN mkdir -p $GALAXY_VIRTUAL_ENV $GALAXY_LOGS_DIR $GALAXY_CONDA_PREFIX $GALAXY_INSTALL_DIR \
+RUN mkdir -p $GALAXY_VIRTUAL_ENV $GALAXY_LOGS_DIR $GALAXY_CONFIG_CONDA_PREFIX $GALAXY_INSTALL_DIR \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_VIRTUAL_ENV \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_LOGS_DIR \
-    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_CONDA_PREFIX \
+    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_CONFIG_CONDA_PREFIX \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_INSTALL_DIR
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -61,20 +61,28 @@ WORKDIR ${GALAXY_INSTALL_DIR}
 USER $GALAXY_USER
 
 RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_64.sh > $GALAXY_HOME/miniconda.sh \
-    && bash $GALAXY_HOME/miniconda.sh -u -b -p $GALAXY_CONDA_PREFIX/ \
+    && bash $GALAXY_HOME/miniconda.sh -u -b -p $GALAXY_CONFIG_CONDA_PREFIX/ \
     && rm $GALAXY_HOME/miniconda.sh \
-    && $GALAXY_CONDA_PREFIX/bin/conda config --add channels defaults \
-    && $GALAXY_CONDA_PREFIX/bin/conda config --add channels bioconda \
-    && $GALAXY_CONDA_PREFIX/bin/conda config --add channels conda-forge \
-    && $GALAXY_CONDA_PREFIX/bin/conda install virtualenv \
-    && $GALAXY_CONDA_PREFIX/bin/conda clean --packages -t -i \
-    && $GALAXY_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV
+    && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels defaults \
+    && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels bioconda \
+    && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels conda-forge \
+    && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda install virtualenv \
+    && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda clean --packages -t -i \
+    && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV
 
 RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
  -r requirements.txt \
  -r <(grep -v mysql lib/galaxy/dependencies/conditional-requirements.txt ) \
 --index-url https://wheels.galaxyproject.org/simple \
 --extra-index-url https://pypi.python.org/simple"
+
+RUN cp config/migrated_tools_conf.xml.sample config/migrated_tools_conf.xml \
+    && cp config/shed_tool_conf.xml.sample config/shed_tool_conf.xml \
+    && cp config/shed_tool_data_table_conf.xml.sample config/shed_tool_data_table_conf.xml \
+    && cp config/shed_data_manager_conf.xml.sample config/shed_data_manager_conf.xml \
+    && cp tool-data/shared/ucsc/builds.txt.sample tool-data/shared/ucsc/builds.txt \
+    && cp tool-data/shared/ucsc/manual_builds.txt.sample tool-data/shared/ucsc/manual_builds.txt \
+    && cp static/welcome.html.sample static/welcome.html
 
 ADD ./entrypoint.sh /usr/bin/entrypoint.sh
 
