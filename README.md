@@ -9,6 +9,9 @@ The name `galaxy-uwsgi` is chosen to differentiate it from the famous
 and the [`galaxy` container maintained by the galaxy team](
 https://hub.docker.com/r/galaxy/galaxy). 
 
+## Usage
+WIP
+
 ## Why another galaxy container?
 
 Galaxy administration is quite hard and there are plenty of people who
