@@ -56,12 +56,13 @@ chown $GALAXY_USER:$GALAXY_USER $GALAXY_INSTALL_DIR
 RUN mkdir -p $GALAXY_VIRTUAL_ENV $GALAXY_LOGS_DIR $GALAXY_CONDA_PREFIX \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_VIRTUAL_ENV \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_LOGS_DIR \
-    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_VIRTUAL_ENV
+    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_CONDA_PREFIX
 
 USER $GALAXY_USER
 
 RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_64.sh > $GALAXY_HOME/miniconda.sh \
-    && bash $GALAXY_HOME/miniconda.sh -b -p $GALAXY_CONDA_PREFIX/ \
+    && bash $GALAXY_HOME/miniconda.sh -u -b -p $GALAXY_CONDA_PREFIX/ \
+    && rm $GALAXY_HOME/miniconda.sh \
     && $GALAXY_CONDA_PREFIX/bin/conda config --add channels defaults \
     && $GALAXY_CONDA_PREFIX/bin/conda config --add channels bioconda \
     && $GALAXY_CONDA_PREFIX/bin/conda config --add channels conda-forge \
@@ -75,7 +76,7 @@ RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
 --index-url https://wheels.galaxyproject.org/simple \
 --extra-index-url https://pypi.python.org/simple"
 
-ADD ./entrypoint.sh entrypoint.sh
+ADD ./entrypoint.sh /usr/bin/entrypoint.sh
 
 EXPOSE 8080
 
