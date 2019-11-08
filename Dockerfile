@@ -32,12 +32,21 @@ GALAXY_LOGS_DIR=/home/galaxy/logs \
 GALAXY_VIRTUAL_ENV=/galaxy_venv \
 GALAXY_CONDA_PREFIX=/conda
 
+RUN useradd --home-dir /home/galaxy --create-home \
+--shell /bin/bash --uid ${GALAXY_UID} galaxy
+
+RUN mkdir -p $GALAXY_VIRTUAL_ENV $GALAXY_LOGS_DIR $GALAXY_CONDA_PREFIX $GALAXY_INSTALL_DIR \
+    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_VIRTUAL_ENV \
+    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_LOGS_DIR \
+    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_CONDA_PREFIX \
+    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_INSTALL_DIR
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
 git \
 curl \
 ca-certificates \
 && \
+runuser -u galaxy -p -- \
 git clone --depth=1 -b release_${GALAXY_VERSION} \
 --separate-git-dir=/tmp/galaxy.git \
 https://github.com/galaxyproject/galaxy.git $GALAXY_INSTALL_DIR \
@@ -48,15 +57,6 @@ apt-get autoremove -y && \
 apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR ${GALAXY_INSTALL_DIR}
-
-RUN useradd --home-dir /home/galaxy --create-home \
---shell /bin/bash --uid ${GALAXY_UID} galaxy && \
-chown $GALAXY_USER:$GALAXY_USER $GALAXY_INSTALL_DIR
-
-RUN mkdir -p $GALAXY_VIRTUAL_ENV $GALAXY_LOGS_DIR $GALAXY_CONDA_PREFIX \
-    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_VIRTUAL_ENV \
-    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_LOGS_DIR \
-    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_CONDA_PREFIX
 
 USER $GALAXY_USER
 
