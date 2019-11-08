@@ -47,7 +47,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     bzip2 \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/*
 
 USER $GALAXY_USER
 
@@ -66,13 +66,15 @@ RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_6
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels conda-forge \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda install virtualenv \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda clean --packages -t -i \
-    && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV
+    && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
+    && rm -rf $GALAXY_HOME/.cache/pip
 
 RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
     -r requirements.txt \
     -r <(grep -v mysql lib/galaxy/dependencies/conditional-requirements.txt ) \
     --index-url https://wheels.galaxyproject.org/simple \
-    --extra-index-url https://pypi.python.org/simple"
+    --extra-index-url https://pypi.python.org/simple" \
+    && rm -rf $GALAXY_VIRTUAL_ENV/src
 
 RUN cp config/migrated_tools_conf.xml.sample config/migrated_tools_conf.xml \
     && cp config/shed_tool_conf.xml.sample config/shed_tool_conf.xml \
@@ -88,7 +90,7 @@ RUN bash -c "source $GALAXY_VIRTUAL_ENV/bin/activate \
     && cd client \
     && $GALAXY_VIRTUAL_ENV/bin/yarn install --network-timeout 300000 --check-files \
     && $GALAXY_VIRTUAL_ENV/bin/yarn run build-production-maps " \
-    && rm -rf /tmp/*
+    && rm -rf /tmp/* $GALAXY_HOME/.cache/* $GALAXY_HOME/.npm client/node_modules*
 
 ADD ./entrypoint.sh /usr/bin/entrypoint.sh
 
