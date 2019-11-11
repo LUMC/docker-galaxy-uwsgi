@@ -49,7 +49,7 @@ https://github.com/galaxyproject/ansible-galaxy-extras) for the same
 reason.
 
 And last but not least many thanks to the maintainers of the [Galaxy
-documentation](https://docs.galaxyproject.org). It is extraordinaly
+documentation](https://docs.galaxyproject.org). It is extraordinarily
 good documentation.
 
 
