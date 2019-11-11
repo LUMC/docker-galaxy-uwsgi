@@ -49,6 +49,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
     bzip2 \
+    gridengine-client \
+    gridengine-drmaa1.0 \
+    slurm-client \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/*
 
