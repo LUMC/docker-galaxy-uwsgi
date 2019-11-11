@@ -23,26 +23,46 @@ FROM debian:buster-slim
 MAINTAINER r.h.p.vorderman@lumc.nl
 
 ARG GALAXY_RELEASE
+
+# Installation settings
 ENV GALAXY_VERSION=${GALAXY_RELEASE:-19.05} \
     GALAXY_INSTALL_DIR=/opt/galaxy \
     GALAXY_UID=1450 \
     GALAXY_USER=galaxy \
     GALAXY_HOME=/home/galaxy \
     GALAXY_VIRTUAL_ENV=/galaxy_venv \
-    GALAXY_CONFIG_CONDA_PREFIX=/conda \
-    UWSGI_PROCESSES=2 \
-    UWSGI_THREADS=4 \
+    CONDA_INSTALL_DIR=/conda \
     DEBIAN_FRONTEND=noninteractive
+
+# Galaxy configuration to create one persistent volume
+ENV EXPORT_DIR=/galaxy_data \
+    GALAXY_CONFIG_DATA_DIR=$EXPORT_DIR/database \
+    GALAXY_CONFIG_FILE_PATH=$EXPORT_DIR/files \
+    GALAXY_CONFIG_NEW_FILE_PATH=$EXPORT_DIR/tmp_files \
+    GALAXY_CONFIG_TOOL_DATA_PATH=$EXPORT_DIR/tool-data \
+    GALAXY_CONFIG_CLUSTER_FILES_DIRECTORY=$EXPORT_DIR/pbs \
+    GALAXY_CONFIG_CITATION_CACHE_DATA_DIR=$EXPORT_DIR/citations/data \
+    GALAXY_CONFIG_CITATION_CACHE_LOCK_DIR=$EXPORT_DIR/citations/locks
+
+# Miscellaneous galaxy settings to make proper use of this container
+ENV GALAXY_CONFIG_WATCH_TOOLS=True \
+    GALAXY_CONFIG_WATCH_TOOL_DATA_DIR=True \
+    GALAXY_CONFIG_CONDA_EXEC=$CONDA_INSTALL_DIR/bin/conda \
+    GALAXY_CONFIG_CONDA_AUTO_INIT=False
+
+ENV UWSGI_PROCESSES=2 \
+    UWSGI_THREADS=4
 
 # Create the galaxy user.
 RUN useradd --home-dir /home/galaxy --create-home \
 --shell /bin/bash --uid ${GALAXY_UID} galaxy
 
 # Make sure all necessary folders are present and owned by the galaxy user.
-RUN mkdir -p $GALAXY_VIRTUAL_ENV $GALAXY_CONFIG_CONDA_PREFIX $GALAXY_INSTALL_DIR \
+RUN mkdir -p $GALAXY_VIRTUAL_ENV $CONDA_INSTALL_DIR $GALAXY_INSTALL_DIR $EXPORT_DIR \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_VIRTUAL_ENV \
-    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_CONFIG_CONDA_PREFIX \
-    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_INSTALL_DIR
+    && chown $GALAXY_USER:$GALAXY_USER $CONDA_INSTALL_DIR \
+    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_INSTALL_DIR \
+    && chown $GALAXY_USER:$GALAXY_USER $EXPORT_DIR
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -68,14 +88,14 @@ WORKDIR ${GALAXY_INSTALL_DIR}
 
 # Install Conda and create a virtualenv
 RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_64.sh > $GALAXY_HOME/miniconda.sh \
-    && bash $GALAXY_HOME/miniconda.sh -u -b -p $GALAXY_CONFIG_CONDA_PREFIX/ \
+    && bash $GALAXY_HOME/miniconda.sh -u -b -p $CONDA_INSTALL_DIR/ \
     && rm $GALAXY_HOME/miniconda.sh \
-    && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels defaults \
-    && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels bioconda \
-    && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels conda-forge \
-    && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda install virtualenv \
-    && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda clean --packages -t -i \
-    && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
+    && $CONDA_INSTALL_DIR/bin/conda config --add channels defaults \
+    && $CONDA_INSTALL_DIR/bin/conda config --add channels bioconda \
+    && $CONDA_INSTALL_DIR/bin/conda config --add channels conda-forge \
+    && $CONDA_INSTALL_DIR/bin/conda install virtualenv \
+    && $CONDA_INSTALL_DIR/bin/conda clean --packages -t -i \
+    && $CONDA_INSTALL_DIR/bin/virtualenv $GALAXY_VIRTUAL_ENV \
     && rm -rf $GALAXY_HOME/.cache/pip
 
 # Populate default environment with all of galaxy's dependencies
