@@ -31,7 +31,8 @@ ENV GALAXY_VERSION=${GALAXY_RELEASE:-19.05} \
     GALAXY_VIRTUAL_ENV=/galaxy_venv \
     GALAXY_CONFIG_CONDA_PREFIX=/conda \
     UWSGI_PROCESSES=2 \
-    UWSGI_THREADS=4
+    UWSGI_THREADS=4 \
+    DEBIAN_FRONTEND=noninteractive
 
 # Create the galaxy user.
 RUN useradd --home-dir /home/galaxy --create-home \
