@@ -11,12 +11,16 @@ $GALAXY_VIRTUAL_ENV/bin/uwsgi \
   --processes $UWSGI_PROCESSES \
   --threads $UWSGI_THREADS \
   --buffer-size 16384 \
+  --py-call-osafterfork \
   --logdate \
   --thunder-lock \
   --master \
+  --die-on-term \
   --http :8080 \
   --pythonpath lib \
   --virtualenv $GALAXY_VIRTUAL_ENV \
   --module 'galaxy.webapps.galaxy.buildapp:uwsgi_app()' \
-  --die-on-term \
+  --static-map /static/style=static/style/blue \
+  --static-map /static=static \
+  --static-map /favicon.ico=static/favicon.ico \
   --yaml config/galaxy.yml

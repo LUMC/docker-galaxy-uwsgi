@@ -1,7 +1,5 @@
+# This file is empty because uwsgi settings are set in /usr/bin/entrypoint.sh
+# Galaxy can be configured via environment variables or by mounting another
+# galaxy.yml file.
 uwsgi:
-  static-map: /static/style=static/style/blue
-  static-map: /static=static
-  static-map: /favicon.ico=static/favicon.ico
-  # Feature necessary for proper mule signal handling
-  py-call-osafterfork: true
 galaxy:
