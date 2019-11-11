@@ -31,27 +31,9 @@ ENV GALAXY_VERSION=${GALAXY_RELEASE:-19.05} \
     GALAXY_USER=galaxy \
     GALAXY_HOME=/home/galaxy \
     GALAXY_VIRTUAL_ENV=/galaxy_venv \
-    CONDA_INSTALL_DIR=/conda \
-    DEBIAN_FRONTEND=noninteractive
-
-# Galaxy configuration to create one persistent volume
-ENV EXPORT_DIR=/galaxy_data \
-    GALAXY_CONFIG_DATA_DIR=$EXPORT_DIR/database \
-    GALAXY_CONFIG_FILE_PATH=$EXPORT_DIR/files \
-    GALAXY_CONFIG_NEW_FILE_PATH=$EXPORT_DIR/tmp_files \
-    GALAXY_CONFIG_TOOL_DATA_PATH=$EXPORT_DIR/tool-data \
-    GALAXY_CONFIG_CLUSTER_FILES_DIRECTORY=$EXPORT_DIR/pbs \
-    GALAXY_CONFIG_CITATION_CACHE_DATA_DIR=$EXPORT_DIR/citations/data \
-    GALAXY_CONFIG_CITATION_CACHE_LOCK_DIR=$EXPORT_DIR/citations/locks
-
-# Miscellaneous galaxy settings to make proper use of this container
-ENV GALAXY_CONFIG_WATCH_TOOLS=True \
-    GALAXY_CONFIG_WATCH_TOOL_DATA_DIR=True \
-    GALAXY_CONFIG_CONDA_EXEC=$CONDA_INSTALL_DIR/bin/conda \
-    GALAXY_CONFIG_CONDA_AUTO_INIT=False
-
-ENV UWSGI_PROCESSES=2 \
-    UWSGI_THREADS=4
+    DEBIAN_FRONTEND=noninteractive \
+    EXPORT_DIR=/galaxy_data \
+    CONDA_INSTALL_DIR=/conda
 
 # Create the galaxy user.
 RUN useradd --home-dir /home/galaxy --create-home \
@@ -114,6 +96,30 @@ RUN bash -c "source $GALAXY_VIRTUAL_ENV/bin/activate \
     && $GALAXY_VIRTUAL_ENV/bin/yarn install --network-timeout 300000 --check-files \
     && $GALAXY_VIRTUAL_ENV/bin/yarn run build-production-maps " \
     && rm -rf /tmp/* $GALAXY_HOME/.cache/* $GALAXY_HOME/.npm client/node_modules*
+
+
+# Galaxy configuration to create one persistent volume
+ENV GALAXY_CONFIG_DATA_DIR=$EXPORT_DIR/database
+ENV GALAXY_CONFIG_TOOL_DEPENDENCY_DIR=$GALAXY_CONFIG_DATA_DIR/dependencies
+ENV GALAXY_CONFIG_CONDA_PREFIX=$GALAXY_CONFIG_TOOL_DEPENDENCY_DIR/_conda
+
+ENV GALAXY_CONFIG_JOB_WORKING_DIRECTORY=$GALAXY_CONFIG_DATA_DIR/jobs_directory \
+    GALAXY_CONFIG_FILE_PATH=$EXPORT_DIR/files \
+    GALAXY_CONFIG_NEW_FILE_PATH=$EXPORT_DIR/tmp_files \
+    GALAXY_CONFIG_TOOL_DATA_PATH=$EXPORT_DIR/tool-data \
+    GALAXY_CONFIG_CLUSTER_FILES_DIRECTORY=$EXPORT_DIR/pbs \
+    GALAXY_CONFIG_CITATION_CACHE_DATA_DIR=$EXPORT_DIR/citations/data \
+    GALAXY_CONFIG_CITATION_CACHE_LOCK_DIR=$EXPORT_DIR/citations/locks \
+    GALAXY_CONFIG_TOOL_TEST_DATA_DIRECTORIES=$EXPORT_DIR/test-data
+
+# Miscellaneous galaxy settings to make proper use of this container
+ENV GALAXY_CONFIG_WATCH_TOOLS=True \
+    GALAXY_CONFIG_WATCH_TOOL_DATA_DIR=True \
+    GALAXY_CONFIG_CONDA_AUTO_INIT=False \
+    GALAXY_CONFIG_CONDA_EXEC=$CONDA_INSTALL_DIR/bin/conda
+
+ENV UWSGI_PROCESSES=2 \
+    UWSGI_THREADS=4
 
 # Create the database. This only adds 3 mb to the container while drastically reducing start time.
 RUN bash create_db.sh
