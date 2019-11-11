@@ -10,7 +10,18 @@ and the [`galaxy` container maintained by the galaxy team](
 https://hub.docker.com/r/galaxy/galaxy). 
 
 ## Usage
-WIP
+Setting a new database connection can be done with environment variables
+```bash
+docker run lumc/galaxy-uwsgi \
+-e GALAXY_CONFIG_DATABASE_CONNECTION=postgresql:///db_user:db_pass@db_host/db_name
+```
+
+For more information check the [SQLAlchemy page on database URIs](
+https://docs.sqlalchemy.org/en/13/core/engines.html#database-urls). 
+Since postgres is the recommended production database and psycopg2
+is the default for connecting with a postgres database with SQLAlchemy
+[this page](https://docs.sqlalchemy.org/en/13/dialects/postgresql.html?highlight=environment#module-sqlalchemy.dialects.postgresql.psycopg2)
+might also be useful.
 
 ## Why another galaxy container?
 
