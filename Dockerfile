@@ -28,7 +28,6 @@ ENV GALAXY_VERSION=${GALAXY_RELEASE:-19.05} \
     GALAXY_UID=1450 \
     GALAXY_USER=galaxy \
     GALAXY_HOME=/home/galaxy \
-    GALAXY_LOGS_DIR=/home/galaxy/logs \
     GALAXY_VIRTUAL_ENV=/galaxy_venv \
     GALAXY_CONFIG_CONDA_PREFIX=/conda \
     UWSGI_PROCESSES=2 \
@@ -39,9 +38,8 @@ RUN useradd --home-dir /home/galaxy --create-home \
 --shell /bin/bash --uid ${GALAXY_UID} galaxy
 
 # Make sure all necessary folders are present and owned by the galaxy user.
-RUN mkdir -p $GALAXY_VIRTUAL_ENV $GALAXY_LOGS_DIR $GALAXY_CONFIG_CONDA_PREFIX $GALAXY_INSTALL_DIR \
+RUN mkdir -p $GALAXY_VIRTUAL_ENV $GALAXY_CONFIG_CONDA_PREFIX $GALAXY_INSTALL_DIR \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_VIRTUAL_ENV \
-    && chown $GALAXY_USER:$GALAXY_USER $GALAXY_LOGS_DIR \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_CONFIG_CONDA_PREFIX \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_INSTALL_DIR
 
