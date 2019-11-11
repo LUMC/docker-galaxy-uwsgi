@@ -113,7 +113,10 @@ ENV GALAXY_CONFIG_JOB_WORKING_DIRECTORY=$GALAXY_CONFIG_DATA_DIR/jobs_directory \
     GALAXY_CONFIG_CLUSTER_FILES_DIRECTORY=$EXPORT_DIR/pbs \
     GALAXY_CONFIG_CITATION_CACHE_DATA_DIR=$EXPORT_DIR/citations/data \
     GALAXY_CONFIG_CITATION_CACHE_LOCK_DIR=$EXPORT_DIR/citations/locks \
-    GALAXY_CONFIG_TOOL_TEST_DATA_DIRECTORIES=$EXPORT_DIR/test-data
+    GALAXY_CONFIG_TOOL_TEST_DATA_DIRECTORIES=$EXPORT_DIR/test-data \
+    GALAXY_CONFIG_MUTABLE_CONFIG_DIR=$EXPORT_DIR/mutable-config \
+    GALAXY_SHED_TOOL_DIR=$EXPORT_DIR/shed_tools \
+    GALAXY_CONFIG_DATABASE_CONNECTION="sqlite:///$GALAXY_CONFIG_DATA_DIR/universe.sqlite?isolation_level=IMMEDIATE"
 
 # Make sure directories are present.
 RUN mkdir -p \
@@ -126,7 +129,13 @@ RUN mkdir -p \
     $GALAXY_CONFIG_CLUSTER_FILES_DIRECTORY \
     $GALAXY_CONFIG_CITATION_CACHE_DATA_DIR \
     $GALAXY_CONFIG_CITATION_CACHE_LOCK_DIR \
-    $GALAXY_CONFIG_TOOL_TEST_DATA_DIRECTORIES
+    $GALAXY_CONFIG_TOOL_TEST_DATA_DIRECTORIES \
+    $GALAXY_CONFIG_MUTABLE_CONFIG_DIR
+
+ENV GALAXY_CONFIG_MIGRATED_TOOLS_CONFIG=$GALAXY_CONFIG_MUTABLE_CONFIG_DIR/migrated_tools_conf.xml \
+    GALAXY_CONFIG_TOOL_CONFIG_FILE=config/tool_conf.xml,$GALAXY_CONFIG_MUTABLE_CONFIG_DIR/shed_tool_conf.xml \
+    GALAXY_CONFIG_SHED_TOOL_DATA_TABLE_CONFIG=$GALAXY_CONFIG_MUTABLE_CONFIG_DIR/shed_tool_data_table_conf.xml \
+    GALAXY_CONFIG_SHED_DATA_MANAGER_CONFIG_FILE=$GALAXY_CONFIG_MUTABLE_CONFIG_DIR/shed_data_manager_conf.xml
 
 # Miscellaneous galaxy settings to make proper use of this container
 ENV GALAXY_CONFIG_WATCH_TOOLS=True \
@@ -137,19 +146,21 @@ ENV GALAXY_CONFIG_WATCH_TOOLS=True \
 ENV UWSGI_PROCESSES=2 \
     UWSGI_THREADS=4
 
-# Create the database. This only adds 3 mb to the container while drastically reducing start time.
-RUN bash create_db.sh
-
 # Make sure config files are present
-RUN cp config/migrated_tools_conf.xml.sample config/migrated_tools_conf.xml \
-    && cp config/shed_tool_conf.xml.sample config/shed_tool_conf.xml \
-    && cp config/shed_tool_data_table_conf.xml.sample config/shed_tool_data_table_conf.xml \
-    && cp config/shed_data_manager_conf.xml.sample config/shed_data_manager_conf.xml \
+RUN cp config/migrated_tools_conf.xml.sample $GALAXY_CONFIG_MIGRATED_TOOLS_CONFIG \
+    && cp config/shed_tool_conf.xml.sample  $GALAXY_CONFIG_MUTABLE_CONFIG_DIR/shed_tool_conf.xml \
+    && cp config/shed_tool_data_table_conf.xml.sample $GALAXY_CONFIG_SHED_TOOL_DATA_TABLE_CONFIG \
+    && cp config/shed_data_manager_conf.xml.sample $GALAXY_CONFIG_SHED_DATA_MANAGER_CONFIG_FILE \
     && cp tool-data/shared/ucsc/builds.txt.sample tool-data/shared/ucsc/builds.txt \
     && cp tool-data/shared/ucsc/manual_builds.txt.sample tool-data/shared/ucsc/manual_builds.txt \
     && cp static/welcome.html.sample static/welcome.html
 
+RUN sed -i "s|database/shed_tools|$GALAXY_SHED_TOOL_DIR|" $GALAXY_CONFIG_TOOL_CONFIG_FILE
+
 ADD galaxy.yml config/galaxy.yml
+
+# Create the database. This only adds 3 mb to the container while drastically reducing start time.
+RUN bash create_db.sh
 
 ADD ./entrypoint.sh /usr/bin/entrypoint.sh
 
