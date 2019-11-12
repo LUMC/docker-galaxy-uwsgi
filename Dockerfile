@@ -87,7 +87,7 @@ RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_6
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda install virtualenv \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda clean --all -f -y \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
-    && rm -rf $GALAXY_HOME/.cache/pip
+    && rm -rf $GALAXY_HOME/.cache/pip && rm -rf $GALAXY_VIRTUAL_ENV/src
 
 # Populate default environment with all of galaxy's dependencies
 RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
