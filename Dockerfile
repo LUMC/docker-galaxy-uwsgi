@@ -96,7 +96,10 @@ RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_6
 # Also remove test files, CI files etc.
 # Compile the python files in lib, so this does not need to happen at runtime.
 # This only adds 7-8 mb to the container and ensures more statelessness outside the
-# export dir.
+# export dir. If the compileall step does not happen, the .pyc files will be
+# generated in between in multiple layers (such as the create_db.sh layer). By
+# compiling before hand we keep the changes in each layer to a minimal part
+# of the filesystem as opposed to all over the place.
 RUN git clone --depth=1 -b release_${GALAXY_VERSION} \
     https://github.com/galaxyproject/galaxy.git $GALAXY_INSTALL_DIR \
     && rm -rf $GALAXY_INSTALL_DIR/.git \
