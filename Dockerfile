@@ -46,7 +46,8 @@ ENV GALAXY_CONFIG_CONDA_PREFIX=$GALAXY_CONFIG_TOOL_DEPENDENCY_DIR/_conda
 
 # Create the galaxy user.
 RUN useradd --home-dir /home/galaxy --create-home \
---shell /bin/bash --uid ${GALAXY_UID} galaxy
+    --shell /bin/bash --uid ${GALAXY_UID} galaxy \
+    && rm -rf /var/log/*
 
 # Make sure all necessary folders are present and owned by the galaxy user.
 RUN mkdir -p $GALAXY_VIRTUAL_ENV $GALAXY_CONFIG_DATA_DIR $GALAXY_CONFIG_CONDA_PREFIX \
@@ -68,15 +69,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gridengine-drmaa1.0 \
     slurm-client \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/*
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/* \
+    /var/log/* /var/lib/dpkg/status /var/lib/dpkg/status-old \
+    /var/lib/dpkg/statoverride /var/lib/dpkg/statoverride-old \
+    /var/lib/apt/extended_states
+
 
 USER $GALAXY_USER
 
 # Clone galaxy to the install dir.
+# Remove the git dir as it is unnecessary
+# Remove galaxy documentation, as it is not used by galaxy
+# Also remove test files, CI files etc.
 RUN git clone --depth=1 -b release_${GALAXY_VERSION} \
---separate-git-dir=/tmp/galaxy.git \
-https://github.com/galaxyproject/galaxy.git $GALAXY_INSTALL_DIR \
-&& rm $GALAXY_INSTALL_DIR/.git %% rm -rf /tmp/galaxy.git
+    https://github.com/galaxyproject/galaxy.git $GALAXY_INSTALL_DIR \
+    && rm -rf $GALAXY_INSTALL_DIR/.git \
+    $GALAXY_INSTALL_DIR/docs $GALAXY_INSTALL_DIR/test/ $GALAXY_INSTALL_DIR/test-data/ \
+    $GALAXY_INSTALL_DIR/.ci $GALAXY_INSTALL_DIR/.circleci $GALAXY_INSTALL_DIR/.coveragerc \
+    $GALAXY_INSTALL_DIR/.gitignore $GALAXY_INSTALL_DIR/.travis.yml \
+    $GALAXY_INSTALL_DIR/Makefile $GALAXY_INSTALL_DIR/pytest.ini \
+    $GALAXY_INSTALL_DIR/tox.ini
 
 WORKDIR ${GALAXY_INSTALL_DIR}
 
@@ -92,7 +104,7 @@ RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_6
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda install virtualenv \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda clean --all -f -y \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
-    && rm -rf $GALAXY_HOME/.cache/pip && rm -rf $GALAXY_VIRTUAL_ENV/src
+    && rm -rf $GALAXY_HOME/.cache/ && rm -rf $GALAXY_VIRTUAL_ENV/src && rm -rf .empty
 
 # Populate default environment with all of galaxy's dependencies
 RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
@@ -164,13 +176,12 @@ ENV UWSGI_PROCESSES=2 \
 RUN cp config/migrated_tools_conf.xml.sample $GALAXY_CONFIG_MIGRATED_TOOLS_CONFIG \
     && cp config/tool_conf.xml.sample config/tool_conf.xml \
     && cp config/shed_tool_conf.xml.sample $GALAXY_CONFIG_SHED_TOOL_CONFIG_FILE \
+    && sed -i "s|database/shed_tools|$GALAXY_SHED_TOOL_DIR|" $GALAXY_CONFIG_SHED_TOOL_CONFIG_FILE \
     && cp config/shed_tool_data_table_conf.xml.sample $GALAXY_CONFIG_SHED_TOOL_DATA_TABLE_CONFIG \
     && cp config/shed_data_manager_conf.xml.sample $GALAXY_CONFIG_SHED_DATA_MANAGER_CONFIG_FILE \
     && cp tool-data/shared/ucsc/builds.txt.sample tool-data/shared/ucsc/builds.txt \
     && cp tool-data/shared/ucsc/manual_builds.txt.sample tool-data/shared/ucsc/manual_builds.txt \
     && cp static/welcome.html.sample static/welcome.html
-
-RUN sed -i "s|database/shed_tools|$GALAXY_SHED_TOOL_DIR|" $GALAXY_CONFIG_SHED_TOOL_CONFIG_FILE
 
 ADD ./entrypoint.sh /usr/bin/entrypoint.sh
 
