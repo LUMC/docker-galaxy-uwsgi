@@ -42,7 +42,7 @@ ENV GALAXY_VERSION=${GALAXY_RELEASE:-19.05} \
 # Store the conda prefix on the persistent volume
 ENV GALAXY_CONFIG_DATA_DIR=$EXPORT_DIR/database
 ENV GALAXY_CONFIG_TOOL_DEPENDENCY_DIR=$EXPORT_DIR/tool_dependencies
-ENV GALAXY_CONFIG_CONDA_PREFIX=$GALAXY_CONFIG_TOOL_DEPENDENCY_DIR/_conda
+ENV GALAXY_CONFIG_CONDA_PREFIX=$EXPORT_DIR/conda
 
 # Create the galaxy user.
 RUN useradd --home-dir /home/galaxy --create-home \
@@ -178,10 +178,12 @@ ENV GALAXY_CONFIG_MIGRATED_TOOLS_CONFIG=$GALAXY_CONFIG_MUTABLE_CONFIG_DIR/migrat
     GALAXY_CONFIG_SHED_DATA_MANAGER_CONFIG_FILE=$GALAXY_CONFIG_MUTABLE_CONFIG_DIR/shed_data_manager_conf.xml \
     GALAXY_CONFIG_INTEGRATED_TOOL_PANEL_CONFIG=$GALAXY_CONFIG_MUTABLE_CONFIG_DIR/integrated_tool_panel.xml
 
-# Miscellaneous galaxy settings to make proper use of this container
+# Miscellaneous galaxy settings to make proper use of this container in a
+# production setting. These settings are opinionated.
 ENV GALAXY_CONFIG_WATCH_TOOLS=True \
     GALAXY_CONFIG_WATCH_TOOL_DATA_DIR=True \
-    GALAXY_CONFIG_CONDA_AUTO_INIT=False
+    GALAXY_CONFIG_CONDA_AUTO_INIT=False \
+    GALAXY_CONFIG_LOG_LEVEL=ERROR
 
 # A sqlite database can only be written to by one thread at a time. So we have one uwsgi process.
 # Otherwise there will be errors.
