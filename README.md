@@ -59,8 +59,13 @@ Many thanks as well to the maintainers of [ansible-galaxy-extras](
 https://github.com/galaxyproject/ansible-galaxy-extras) for the same 
 reason.
 
-And last but not least many thanks to the maintainers of the [Galaxy
-documentation](https://docs.galaxyproject.org). It is extraordinarily
-good documentation.
+Many thanks to the maintainers of the [Galaxy documentation](
+https://docs.galaxyproject.org). It has a comprehensive list of 
+requirements for a production instance.
 
-
+Many thanks to the authors of the [dive program](
+https://github.com/wagoodman/dive) which was used to inspect the files
+which were added by each layer. Thanks to dive the order of the `RUN`
+commands in the Dockerfile is more logical. Also it helped eliminate 
+redundant files from the container as well as showing which files did
+*not* end up in `/galaxy_storage/` during runtime.
