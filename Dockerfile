@@ -76,6 +76,8 @@ https://github.com/galaxyproject/galaxy.git $GALAXY_INSTALL_DIR \
 WORKDIR ${GALAXY_INSTALL_DIR}
 
 # Install Conda and create a virtualenv
+# we use conda clean -f flag to also remove the package cache for used packages
+# this has no deleterious effect since no packages in the base refer to the pkgs dir
 RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_64.sh > $GALAXY_HOME/miniconda.sh \
     && bash $GALAXY_HOME/miniconda.sh -u -b -p $GALAXY_CONFIG_CONDA_PREFIX/ \
     && rm $GALAXY_HOME/miniconda.sh \
@@ -83,7 +85,7 @@ RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_6
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels bioconda \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels conda-forge \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda install virtualenv \
-    && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda clean --packages -t -i \
+    && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda clean --all -f -y \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
     && rm -rf $GALAXY_HOME/.cache/pip
 
@@ -102,7 +104,7 @@ RUN bash -c "source $GALAXY_VIRTUAL_ENV/bin/activate \
     && cd client \
     && $GALAXY_VIRTUAL_ENV/bin/yarn install --network-timeout 300000 --check-files \
     && $GALAXY_VIRTUAL_ENV/bin/yarn run build-production-maps " \
-    && rm -rf /tmp/* $GALAXY_HOME/.cache/* $GALAXY_HOME/.npm client/node_modules*
+    && rm -rf /tmp/* $GALAXY_HOME/.cache/* $GALAXY_HOME/.npm client/node_modules* rm -rf $GALAXY_VIRTUAL_ENV/src
 
 
 # Galaxy configuration to create one persistent volume
