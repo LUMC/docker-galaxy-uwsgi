@@ -79,6 +79,9 @@ USER $GALAXY_USER
 # Install Conda and create a virtualenv
 # we use conda clean -f flag to also remove the package cache for used packages
 # this has no deleterious effect since no packages in the base refer to the pkgs dir
+# Make sure all python files are compiled so it does not happen at runtime
+# Some files give syntax errors (notable the ones for python3 while compiling with python2)
+# so we exit with 0 always. This adds only 100 kb to the container.
 RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_64.sh > $GALAXY_HOME/miniconda.sh \
     && bash $GALAXY_HOME/miniconda.sh -u -b -p $GALAXY_CONFIG_CONDA_PREFIX/ \
     && rm $GALAXY_HOME/miniconda.sh \
@@ -87,6 +90,7 @@ RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_6
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels conda-forge \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda install virtualenv \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda clean --all -f -y \
+    && ($GALAXY_CONFIG_CONDA_PREFIX/bin/python -m compileall $GALAXY_CONFIG_CONDA_PREFIX || exit 0) \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
     && rm -rf $GALAXY_HOME/.cache/ && rm -rf $GALAXY_VIRTUAL_ENV/src && rm -rf .empty
 
@@ -113,22 +117,26 @@ RUN git clone --depth=1 -b release_${GALAXY_VERSION} \
 WORKDIR ${GALAXY_INSTALL_DIR}
 
 # Populate default environment with all of galaxy's dependencies.
+# Also install nodeenv, npm and yarn in the GALAXY_VIRTUAL_ENV.
+# Again we compile all files that can be precompiled. This adds only very little (<200kb)
+# if anything to the layer.
 RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
     -r requirements.txt \
     -r <(grep -v mysql lib/galaxy/dependencies/conditional-requirements.txt ) \
     --index-url https://wheels.galaxyproject.org/simple \
-    --extra-index-url https://pypi.python.org/simple" \
-    && rm -rf $GALAXY_VIRTUAL_ENV/src
+    --extra-index-url https://pypi.python.org/simple \
+    && source $GALAXY_VIRTUAL_ENV/bin/activate \
+    && $GALAXY_VIRTUAL_ENV/bin/nodeenv -n $(cat client/.node_version) -p \
+    && $GALAXY_VIRTUAL_ENV/bin/npm install --global yarn" \
+    && rm -rf $GALAXY_VIRTUAL_ENV/src $GALAXY_HOME/.npm \
+    && ($GALAXY_VIRTUAL_ENV/bin/python -m compileall $GALAXY_VIRTUAL_ENV || exit 0)
 
 # Build the galaxy client
-RUN bash -c "source $GALAXY_VIRTUAL_ENV/bin/activate \
-    && $GALAXY_VIRTUAL_ENV/bin/nodeenv -n $(cat client/.node_version) -p \
-    && $GALAXY_VIRTUAL_ENV/bin/npm install --global yarn \
-    && cd client \
+RUN bash -c "cd client \
+    && source $GALAXY_VIRTUAL_ENV/bin/activate \
     && $GALAXY_VIRTUAL_ENV/bin/yarn install --network-timeout 300000 --check-files \
     && $GALAXY_VIRTUAL_ENV/bin/yarn run build-production-maps " \
-    && rm -rf /tmp/* $GALAXY_HOME/.cache/* $GALAXY_HOME/.npm client/node_modules* rm -rf $GALAXY_VIRTUAL_ENV/src
-
+    && rm -rf /tmp/* $GALAXY_HOME/.cache/* client/node_modules*
 
 # Galaxy configuration to create one persistent volume
 ENV GALAXY_CONFIG_JOB_WORKING_DIRECTORY=$GALAXY_CONFIG_DATA_DIR/jobs_directory \
@@ -178,6 +186,7 @@ ENV GALAXY_CONFIG_WATCH_TOOLS=True \
 # A sqlite database can only be written to by one thread at a time. So we have one uwsgi process.
 # Otherwise there will be errors.
 # Of course this can be different for postgres databases but that is for the user to set.
+# As a side note: One uwsgi process feels much more responsive when testing.
 ENV UWSGI_PROCESSES=1 \
     UWSGI_THREADS=4
 
