@@ -74,23 +74,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     /var/lib/dpkg/statoverride /var/lib/dpkg/statoverride-old \
     /var/lib/apt/extended_states
 
-
 USER $GALAXY_USER
-
-# Clone galaxy to the install dir.
-# Remove the git dir as it is unnecessary
-# Remove galaxy documentation, as it is not used by galaxy
-# Also remove test files, CI files etc.
-RUN git clone --depth=1 -b release_${GALAXY_VERSION} \
-    https://github.com/galaxyproject/galaxy.git $GALAXY_INSTALL_DIR \
-    && rm -rf $GALAXY_INSTALL_DIR/.git \
-    $GALAXY_INSTALL_DIR/docs $GALAXY_INSTALL_DIR/test/ $GALAXY_INSTALL_DIR/test-data/ \
-    $GALAXY_INSTALL_DIR/.ci $GALAXY_INSTALL_DIR/.circleci $GALAXY_INSTALL_DIR/.coveragerc \
-    $GALAXY_INSTALL_DIR/.gitignore $GALAXY_INSTALL_DIR/.travis.yml \
-    $GALAXY_INSTALL_DIR/Makefile $GALAXY_INSTALL_DIR/pytest.ini \
-    $GALAXY_INSTALL_DIR/tox.ini
-
-WORKDIR ${GALAXY_INSTALL_DIR}
 
 # Install Conda and create a virtualenv
 # we use conda clean -f flag to also remove the package cache for used packages
@@ -106,7 +90,26 @@ RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_6
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
     && rm -rf $GALAXY_HOME/.cache/ && rm -rf $GALAXY_VIRTUAL_ENV/src && rm -rf .empty
 
-# Populate default environment with all of galaxy's dependencies
+# Clone galaxy to the install dir.
+# Remove the git dir as it is unnecessary
+# Remove galaxy documentation, as it is not used by galaxy
+# Also remove test files, CI files etc.
+# Compile the python files in lib, so this does not need to happen at runtime.
+# This only adds 7-8 mb to the container and ensures more statelessness outside the
+# export dir.
+RUN git clone --depth=1 -b release_${GALAXY_VERSION} \
+    https://github.com/galaxyproject/galaxy.git $GALAXY_INSTALL_DIR \
+    && rm -rf $GALAXY_INSTALL_DIR/.git \
+    $GALAXY_INSTALL_DIR/docs $GALAXY_INSTALL_DIR/test/ $GALAXY_INSTALL_DIR/test-data/ \
+    $GALAXY_INSTALL_DIR/.ci $GALAXY_INSTALL_DIR/.circleci $GALAXY_INSTALL_DIR/.coveragerc \
+    $GALAXY_INSTALL_DIR/.gitignore $GALAXY_INSTALL_DIR/.travis.yml \
+    $GALAXY_INSTALL_DIR/Makefile $GALAXY_INSTALL_DIR/pytest.ini \
+    $GALAXY_INSTALL_DIR/tox.ini \
+    && $GALAXY_VIRTUAL_ENV/bin/python -m compileall $GALAXY_INSTALL_DIR/lib
+
+WORKDIR ${GALAXY_INSTALL_DIR}
+
+# Populate default environment with all of galaxy's dependencies.
 RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
     -r requirements.txt \
     -r <(grep -v mysql lib/galaxy/dependencies/conditional-requirements.txt ) \
