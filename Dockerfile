@@ -22,17 +22,22 @@ FROM debian:buster-slim
 
 MAINTAINER r.h.p.vorderman@lumc.nl
 
+# Build args to make it easier to build a container for a cluster environment.
 ARG GALAXY_RELEASE
+ARG GALAXY_USER
+ARG GALAXY_UID
+ARG EXPORT_DIR
+ARG GALAXY_VIRTUAL_ENV
 
 # Installation settings
 ENV GALAXY_VERSION=${GALAXY_RELEASE:-19.05} \
+    GALAXY_UID=${GALAXY_UID:-1450] \
+    GALAXY_USER=${GALAXY_USER:-galaxy} \
+    GALAXY_VIRTUAL_ENV=${GALAXY_VIRTUAL_ENV:-/galaxy_venv} \
+    EXPORT_DIR=${EXPORT_DIR:-/galaxy_data} \
     GALAXY_INSTALL_DIR=/opt/galaxy \
-    GALAXY_UID=1450 \
-    GALAXY_USER=galaxy \
     GALAXY_HOME=/home/galaxy \
-    GALAXY_VIRTUAL_ENV=/galaxy_venv \
-    DEBIAN_FRONTEND=noninteractive \
-    EXPORT_DIR=/galaxy_data
+    DEBIAN_FRONTEND=noninteractive
 
 # Store the conda prefix on the persistent volume
 ENV GALAXY_CONFIG_DATA_DIR=$EXPORT_DIR/database
