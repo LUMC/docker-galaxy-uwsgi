@@ -175,7 +175,10 @@ ENV GALAXY_CONFIG_WATCH_TOOLS=True \
     GALAXY_CONFIG_CONDA_AUTO_INIT=False \
     GALAXY_CONFIG_CONDA_EXEC=$GALAXY_CONFIG_CONDA_PREFIX/bin/conda
 
-ENV UWSGI_PROCESSES=2 \
+# A sqlite database can only be written to by one thread at a time. So we have one uwsgi process.
+# Otherwise there will be errors.
+# Of course this can be different for postgres databases but that is for the user to set.
+ENV UWSGI_PROCESSES=1 \
     UWSGI_THREADS=4
 
 # Make sure config files are present
