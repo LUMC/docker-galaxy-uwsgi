@@ -79,6 +79,10 @@ USER $GALAXY_USER
 # Install Conda and create a virtualenv
 # we use conda clean -f flag to also remove the package cache for used packages
 # this has no deleterious effect since no packages in the base refer to the pkgs dir
+# We copy instead of symlink the virtual environment. This makes sure galaxy
+# python is independent of conda python. Since the conda python is on the export
+# dir and can be moved/changed/corrupted by the user this is a precaution to preclude any nasty business.
+# The cost for this is 19 mb.
 # Make sure all python files are compiled so it does not happen at runtime
 # Some files give syntax errors (notable the ones for python3 while compiling with python2)
 # so we exit with 0 always. This adds only 100 kb to the container.
@@ -91,7 +95,7 @@ RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_6
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda install virtualenv \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda clean --all -f -y \
     && ($GALAXY_CONFIG_CONDA_PREFIX/bin/python -m compileall $GALAXY_CONFIG_CONDA_PREFIX || exit 0) \
-    && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
+    && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv --always-copy $GALAXY_VIRTUAL_ENV \
     && rm -rf $GALAXY_HOME/.cache $GALAXY_VIRTUAL_ENV/src
 
 # Clone galaxy to the install dir.
