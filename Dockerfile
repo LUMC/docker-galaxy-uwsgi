@@ -42,7 +42,7 @@ ENV GALAXY_VERSION=${GALAXY_RELEASE:-19.05} \
 # Store the conda prefix on the persistent volume
 ENV GALAXY_CONFIG_DATA_DIR=$EXPORT_DIR/database
 ENV GALAXY_CONFIG_TOOL_DEPENDENCY_DIR=$EXPORT_DIR/tool_dependencies
-ENV GALAXY_CONFIG_CONDA_PREFIX=$EXPORT_DIR/conda
+ENV GALAXY_CONFIG_CONDA_PREFIX=$GALAXY_CONFIG_TOOL_DEPENDENCY_DIR/_conda
 
 # Create the galaxy user.
 RUN useradd --home-dir /home/galaxy --create-home \
@@ -92,7 +92,7 @@ RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_6
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda clean --all -f -y \
     && ($GALAXY_CONFIG_CONDA_PREFIX/bin/python -m compileall $GALAXY_CONFIG_CONDA_PREFIX || exit 0) \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
-    && rm -rf $GALAXY_HOME/.cache/ && rm -rf $GALAXY_VIRTUAL_ENV/src && rm -rf .empty
+    && rm -rf $GALAXY_HOME/.cache $GALAXY_VIRTUAL_ENV/src $GALAXY_HOME/.config .empty
 
 # Clone galaxy to the install dir.
 # Remove the git dir as it is unnecessary
@@ -136,7 +136,7 @@ RUN bash -c "cd client \
     && source $GALAXY_VIRTUAL_ENV/bin/activate \
     && $GALAXY_VIRTUAL_ENV/bin/yarn install --network-timeout 300000 --check-files \
     && $GALAXY_VIRTUAL_ENV/bin/yarn run build-production-maps " \
-    && rm -rf /tmp/* $GALAXY_HOME/.cache/* client/node_modules*
+    && rm -rf /tmp/* $GALAXY_HOME/.cache client/node_modules*
 
 # Galaxy configuration to create one persistent volume
 ENV GALAXY_CONFIG_JOB_WORKING_DIRECTORY=$GALAXY_CONFIG_DATA_DIR/jobs_directory \
