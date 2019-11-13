@@ -13,6 +13,67 @@ https://hub.docker.com/r/galaxy/galaxy).
 
 ### Quickstart
 
+The container includes everything to get started. All the dependencies and optional
+dependencies for galaxy are installed so all config options should work out of 
+the box. Also a fresh galaxy sqlite database is present so that does not need to
+be created on runtime.
+
+To start a container for quick testing:
+
+`docker run -p 8080:8080 -it -e GALAXY_CONFIG_ADMIN_USERS=my_email@example.org lumc/galaxy-uwsgi`
+
+This will run a server process in your terminal which will die on keyboard interrupt.
+The server will be accessible on `http://localhost:8080`. 
+You can use the e-mail adress given in `GALAXY_CONFIG_ADMIN_USERS` to register with admin rights.
+
+If you want to save the state of your galaxy instance (all files, histories, tools etc.) attach
+a docker volume to the container:
+
+```bash 
+docker volume create my_galaxy
+docker run -it -p 8080:8080 -v my_galaxy:/galaxy_data -e GALAXY_CONFIG_ADMIN_USERS=my_email@example.org lumc/galaxy-uwsgi
+```
+
+Alternatively you can save Galaxy's state to your filesystem
+```bash
+docker run -it -p 8080:8080 -v $HOME/galaxy:/galaxy_data -e GALAXY_CONFIG_ADMIN_USERS=my_email@example.org lumc/galaxy-uwsgi
+````
+
+To start the container as a daemon and not have the output on the command line use the `-d` flag instead of the `-it` flags:
+```bash
+docker run -d -p 8080:8080 -v my_galaxy:/galaxy_data -e GALAXY_CONFIG_ADMIN_USERS=my_email@example.org lumc/galaxy-uwsgi
+```
+
+### Galaxy settings
+
+Galaxy itself has a mechanism where all config settings can also be set in the environment 
+by capitalizing them and prepending `GALAXY_CONFIG_`. For example the `admin_users` settings
+can be set in the environment with `GALAXY_CONFIG_ADMIN_USERS`. Settings in 
+`/opt/galaxy/config/galaxy.yml` take priority over these settings.
+
+For ad-hoc use the galaxy configuration can be set using environment variables as shown in the 
+quickstart. For production it is recommended to mount a `galaxy.yml` file to `/opt/galaxy/config/galaxy.yml`.
+
+For example:
+```bash 
+docker run docker run -d -p 8080:8080 -v my_galaxy_config.yml:/opt/galaxy/config/galaxy.yml -v my_galaxy:/galaxy_data lumc/galaxy-uwsgi
+```
+
+This container uses the defaults as much as possible, except when it comes to file paths. These
+where adjusted to make sure all the generated data end up in `/galaxy_data`. 
+All these settings where set using environment variables. `galaxy.yml` in this container is empty.
+
+The settings that are not file related and not default are as follows:
+
+environment variable | value | reason to deviate from default.
+---|---|---
+GALAXY_CONFIG_WATCH_TOOL_DATA_DIR | True | This container has watchdog available. Without this setting a reboot/reload is needed every time a data manager has run.
+GALAXY_CONFIG_WATCH_TOOLS | True  | This container has watchdog available. Automatic reloading is much friendlier to admins.
+GALAXY_CONFIG_CONDA_AUTO_INIT | False | Conda auto initialization should not happen as it is available in the container.
+GALAXY_CONFIG_LOG_LEVEL | ERROR | ERROR is more suited for production use cases. The default DEBUG creates very long logs.
+
+These are all the non-default settings. This amount was kept to a minimum to prevent unexpected behaviour.
+
 ### Directories in the container
 
 Directory | usage
