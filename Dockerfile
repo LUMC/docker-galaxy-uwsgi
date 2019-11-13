@@ -92,7 +92,7 @@ RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_6
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda clean --all -f -y \
     && ($GALAXY_CONFIG_CONDA_PREFIX/bin/python -m compileall $GALAXY_CONFIG_CONDA_PREFIX || exit 0) \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
-    && rm -rf $GALAXY_HOME/.cache $GALAXY_VIRTUAL_ENV/src $GALAXY_HOME/.config .empty
+    && rm -rf $GALAXY_HOME/.cache $GALAXY_VIRTUAL_ENV/src .empty
 
 # Clone galaxy to the install dir.
 # Remove the git dir as it is unnecessary
@@ -128,7 +128,7 @@ RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
     && source $GALAXY_VIRTUAL_ENV/bin/activate \
     && $GALAXY_VIRTUAL_ENV/bin/nodeenv -n $(cat client/.node_version) -p \
     && $GALAXY_VIRTUAL_ENV/bin/npm install --global yarn" \
-    && rm -rf $GALAXY_VIRTUAL_ENV/src $GALAXY_HOME/.npm \
+    && rm -rf $GALAXY_VIRTUAL_ENV/src $GALAXY_HOME/.npm $GALAXY_HOME/.config \
     && ($GALAXY_VIRTUAL_ENV/bin/python -m compileall $GALAXY_VIRTUAL_ENV || exit 0)
 
 # Build the galaxy client
