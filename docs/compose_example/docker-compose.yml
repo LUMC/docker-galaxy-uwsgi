@@ -1,4 +1,6 @@
-version: "3.7"
+version: "3.5"
+networks:
+  galaxy_network:
 services:
   db:
     # Check postgres container information here: https://hub.docker.com/_/postgres
@@ -7,15 +9,18 @@ services:
       POSTGRES_USER: db_user
       POSTGRES_PASSWORD: secret!
       POSTGRES_DB: galaxy_db
+    networks:
+      - galaxy_network
   web:
     image: "lumc/galaxy-uwsgi:init"
     ports:
       - 8080:8080
     environment:
       # Database connection URL information can be found here: https://docs.sqlalchemy.org/en/13/core/engines.html#database-urls
-      GALAXY_CONFIG_DATABASE_CONNECTION: "postgresql+psycopg2://db"
+      GALAXY_CONFIG_DATABASE_CONNECTION: "postgresql://db"
       # Check postgres connection variables here: https://www.postgresql.org/docs/current/libpq-envars.html
       PGUSER: db_user
       PGPASSWORD: secret!
       PGDATABASE: galaxy_db
-
+    networks:
+      - galaxy_network
