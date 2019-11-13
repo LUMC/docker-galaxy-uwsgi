@@ -92,7 +92,7 @@ RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_6
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda clean --all -f -y \
     && ($GALAXY_CONFIG_CONDA_PREFIX/bin/python -m compileall $GALAXY_CONFIG_CONDA_PREFIX || exit 0) \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
-    && rm -rf $GALAXY_HOME/.cache $GALAXY_VIRTUAL_ENV/src .empty
+    && rm -rf $GALAXY_HOME/.cache $GALAXY_VIRTUAL_ENV/src
 
 # Clone galaxy to the install dir.
 # Remove the git dir as it is unnecessary
