@@ -115,7 +115,10 @@ Directory | usage
 
 ## Production setup using docker swarm.
 
+Galaxy version 19.05, postgres version 9.6 and nginx version 1.16 will be used as 
+example here. Feel free to use other versions. 
 
+### Setting up configs and secrets
 
 ## Why another galaxy container?
 
