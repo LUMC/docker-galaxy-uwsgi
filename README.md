@@ -10,6 +10,26 @@ and the [`galaxy` container maintained by the galaxy team](
 https://hub.docker.com/r/galaxy/galaxy). 
 
 ## Usage
+
+### Quickstart
+
+### Directories in the container
+
+Directory | usage
+---|---
+/galaxy_data | All data that is generated during the running of an instance is stored here.
+/galaxy_data/database | Contains the sqlite database, files, job_working directory and citations
+/galaxy_data/shed_tools | Contains all the installed shed_tools
+/galaxy_data/tool_data | Where indexes, reference sequences etc. are stored
+/galaxy_data/tool_test_data | Test data for tool tests
+/galaxy_data/mutable_config | Contains the config files that are updated on each tool install. Such as the tool panel information.
+/galaxy_data/tool_dependencies | Contains the conda prefix (`_conda`) and all the environments necessary for running tool shed tools.
+/galaxy_venv | Contains the galaxy virtual environment including all dependencies and optional dependencies
+/opt/galaxy | Contains a checkout of the galaxy git repository
+/opt/galaxy/config | Where the static config files reside. You can mount your own configs such as galaxy.yml or job_conf.xml in this directory.
+/opt/galaxy/lib | The location of galaxy's library.
+
+### Database connections
 Setting a new database connection can be done with environment variables
 ```bash
 docker run lumc/galaxy-uwsgi \
@@ -22,6 +42,9 @@ Since postgres is the recommended production database and psycopg2
 is the default for connecting with a postgres database with SQLAlchemy
 [this page](https://docs.sqlalchemy.org/en/13/dialects/postgresql.html?highlight=environment#module-sqlalchemy.dialects.postgresql.psycopg2)
 might also be useful.
+
+NOTE: MySQL is not supported by this container. It will also not be supported by
+Galaxy anymore from 19.09 onwards.
 
 ## Why another galaxy container?
 
