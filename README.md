@@ -74,6 +74,29 @@ GALAXY_CONFIG_LOG_LEVEL | ERROR | ERROR is more suited for production use cases.
 
 These are all the non-default settings. This amount was kept to a minimum to prevent unexpected behaviour.
 
+### Database connections
+Setting a new database connection can be done with environment variables as well
+```bash
+docker run lumc/galaxy-uwsgi \
+-e GALAXY_CONFIG_DATABASE_CONNECTION=postgresql:///db_user:db_pass@db_host/db_name
+```
+
+For more information check the [SQLAlchemy page on database URIs](
+https://docs.sqlalchemy.org/en/13/core/engines.html#database-urls). 
+Since postgres is the recommended production database and psycopg2
+is the default for connecting with a postgres database with SQLAlchemy
+[this page](https://docs.sqlalchemy.org/en/13/dialects/postgresql.html?highlight=environment#module-sqlalchemy.dialects.postgresql.psycopg2)
+might also be useful.
+
+NOTE: MySQL is not supported by this container. The python dependency is not installed in the environment.
+It will also not be supported by Galaxy anymore from 19.09 onwards.
+
+### Other environment variables
+
+Environment variable | default | usage
+UWSGI_PROCESSES | 1 | Set the number of uwsgi processes. Do not increase this above 1 if you are using the SQLITE database.
+UWSGI_THREADS | 4 | The number of threads uwsgi can use.
+
 ### Directories in the container
 
 Directory | usage
@@ -90,22 +113,9 @@ Directory | usage
 /opt/galaxy/config | Where the static config files reside. You can mount your own configs such as galaxy.yml or job_conf.xml in this directory.
 /opt/galaxy/lib | The location of galaxy's library.
 
-### Database connections
-Setting a new database connection can be done with environment variables
-```bash
-docker run lumc/galaxy-uwsgi \
--e GALAXY_CONFIG_DATABASE_CONNECTION=postgresql:///db_user:db_pass@db_host/db_name
-```
+## Production setup using docker swarm.
 
-For more information check the [SQLAlchemy page on database URIs](
-https://docs.sqlalchemy.org/en/13/core/engines.html#database-urls). 
-Since postgres is the recommended production database and psycopg2
-is the default for connecting with a postgres database with SQLAlchemy
-[this page](https://docs.sqlalchemy.org/en/13/dialects/postgresql.html?highlight=environment#module-sqlalchemy.dialects.postgresql.psycopg2)
-might also be useful.
 
-NOTE: MySQL is not supported by this container. It will also not be supported by
-Galaxy anymore from 19.09 onwards.
 
 ## Why another galaxy container?
 
