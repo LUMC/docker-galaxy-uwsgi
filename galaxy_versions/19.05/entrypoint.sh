@@ -21,6 +21,7 @@ $GALAXY_VIRTUAL_ENV/bin/uwsgi \
   --master \
   --die-on-term \
   --http :8080 \
+  --socket :8000 \
   --pythonpath lib \
   --virtualenv $GALAXY_VIRTUAL_ENV \
   --module 'galaxy.webapps.galaxy.buildapp:uwsgi_app()' \
