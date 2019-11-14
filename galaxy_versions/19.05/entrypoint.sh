@@ -13,6 +13,7 @@ $GALAXY_VIRTUAL_ENV/bin/uwsgi \
   --enable-threads \
   --processes $UWSGI_PROCESSES \
   --threads $UWSGI_THREADS \
+  --offload-threads 1 \
   --buffer-size 16384 \
   --py-call-osafterfork \
   --logdate \
