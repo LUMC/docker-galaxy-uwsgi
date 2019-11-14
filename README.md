@@ -70,7 +70,7 @@ environment variable | value | reason to deviate from default.
 GALAXY_CONFIG_WATCH_TOOL_DATA_DIR | True | This container has watchdog available. Without this setting a reboot/reload is needed every time a data manager has run.
 GALAXY_CONFIG_WATCH_TOOLS | True  | This container has watchdog available. Automatic reloading is much friendlier to admins.
 GALAXY_CONFIG_CONDA_AUTO_INIT | False | Conda auto initialization should not happen as it is available in the container.
-GALAXY_CONFIG_LOG_LEVEL | ERROR | ERROR is more suited for production use cases. The default DEBUG creates very long logs.
+GALAXY_CONFIG_LOG_LEVEL | INFO | INFO is more suited for production use cases. The default DEBUG creates very long logs.
 
 These are all the non-default settings. This amount was kept to a minimum to prevent unexpected behaviour.
 

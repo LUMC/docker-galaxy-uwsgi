@@ -184,7 +184,7 @@ ENV GALAXY_CONFIG_MIGRATED_TOOLS_CONFIG=$GALAXY_CONFIG_MUTABLE_CONFIG_DIR/migrat
 ENV GALAXY_CONFIG_WATCH_TOOLS=True \
     GALAXY_CONFIG_WATCH_TOOL_DATA_DIR=True \
     GALAXY_CONFIG_CONDA_AUTO_INIT=False \
-    GALAXY_CONFIG_LOG_LEVEL=ERROR
+    GALAXY_CONFIG_LOG_LEVEL=INFO
 
 # A sqlite database can only be written to by one thread at a time. So we have one uwsgi process.
 # Otherwise there will be errors.
@@ -200,6 +200,7 @@ RUN cp config/migrated_tools_conf.xml.sample $GALAXY_CONFIG_MIGRATED_TOOLS_CONFI
     && sed -i "s|database/shed_tools|$GALAXY_SHED_TOOL_DIR|" $GALAXY_CONFIG_SHED_TOOL_CONFIG_FILE \
     && cp config/shed_tool_data_table_conf.xml.sample $GALAXY_CONFIG_SHED_TOOL_DATA_TABLE_CONFIG \
     && cp config/shed_data_manager_conf.xml.sample $GALAXY_CONFIG_SHED_DATA_MANAGER_CONFIG_FILE \
+    && mkdir -p $GALAXY_CONFIG_TOOL_DATA_PATH/shared/ucsc/ \
     && cp tool-data/shared/ucsc/builds.txt.sample $GALAXY_CONFIG_TOOL_DATA_PATH/shared/ucsc/builds.txt \
     && cp tool-data/shared/ucsc/manual_builds.txt.sample $GALAXY_CONFIG_TOOL_DATA_PATH/shared/ucsc/manual_builds.txt \
     && cp static/welcome.html.sample static/welcome.html
