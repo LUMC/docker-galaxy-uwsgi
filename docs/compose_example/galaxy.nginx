@@ -12,8 +12,6 @@ server {
     gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
     gzip_buffers 16 8k;
 
-
-
     location / {
         include uwsgi_params;
         # allow up to 3 minutes for Galaxy to respond to slow requests before timing out
@@ -25,12 +23,13 @@ server {
         uwsgi_param X-Real-IP $remote_addr;
         uwsgi_param X-Forwarded-For $proxy_add_x_forwarded_for;
         uwsgi_param X-Forwarded-Proto $http_x_forwarded_proto;
-
     }
 
     # use a variable for convenience
     set $galaxy_root /opt/galaxy;
+
     # serve framework static content
+    # This works because we put galaxy-root on a volume and mounted this read-only.
     location /static/style {
         alias $galaxy_root/static/style/blue;
         expires 24h;
