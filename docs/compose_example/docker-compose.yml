@@ -1,7 +1,9 @@
 version: "3.5"
 networks:
   galaxy_network:
-    driver: bridge
+volumes:
+  postgres-data:
+  galaxy-data:
 services:
   db:
     # Check postgres container information here: https://hub.docker.com/_/postgres
@@ -12,6 +14,8 @@ services:
       POSTGRES_DB: galaxy_db
     networks:
       - galaxy_network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
   web:
     image: "lumc/galaxy-uwsgi:19.05"
     ports:
@@ -24,5 +28,10 @@ services:
       PGUSER: db_user
       PGPASSWORD: secret
       PGDATABASE: galaxy_db
+    volumes:
+      - galaxy-data:/galaxy-data
     networks:
       - galaxy_network
+    depends_on:
+      - db
+
