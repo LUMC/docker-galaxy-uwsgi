@@ -9,9 +9,10 @@ services:
     # Check postgres container information here: https://hub.docker.com/_/postgres
     image: "postgres:9.6"
     environment:
-      POSTGRES_USER: db_user
+      POSTGRES_USER: dbuser
+      POSTGRES_ROOT_PASSWORD: secret
       POSTGRES_PASSWORD: secret
-      POSTGRES_DB: galaxy_db
+      POSTGRES_DB: galaxydb
     networks:
       - galaxy_network
     volumes:
@@ -22,12 +23,11 @@ services:
       - 8080:8080
     environment:
       # Database connection URL information can be found here: https://docs.sqlalchemy.org/en/13/core/engines.html#database-urls
-      GALAXY_CONFIG_DATABASE_CONNECTION: "postgresql://"
+      # WARNING: An empty connection url such as "postgresql://" will not work with sqlalchemy. At least host and db need to be there.
+      GALAXY_CONFIG_DATABASE_CONNECTION: "postgresql://db/galaxydb?client_encoding=utf8"
       # Check postgres connection variables here: https://www.postgresql.org/docs/current/libpq-envars.html
-      PGHOST: db
-      PGUSER: db_user
+      PGUSER: dbuser
       PGPASSWORD: secret
-      PGDATABASE: galaxy_db
     volumes:
       - galaxy-data:/galaxy-data
     networks:
