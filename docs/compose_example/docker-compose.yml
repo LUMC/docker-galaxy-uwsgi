@@ -21,6 +21,9 @@ services:
 
   web:
     image: "lumc/galaxy-uwsgi:19.05"
+    # The sleep is needed because this is a compose setup. Galaxy will crash when the database is not ready.
+    # In a docker stack+swarm setup the web container will simply restart so this is not needed.
+    command: "bash -c 'sleep 10 && /usr/bin/entrypoint.sh'"
     environment:
       # Database connection URL information can be found here: https://docs.sqlalchemy.org/en/13/core/engines.html#database-urls
       # WARNING: An empty connection url such as "postgresql://" will not work with sqlalchemy. At least host and db need to be there.
