@@ -148,7 +148,27 @@ a docker swarm deployed with a docker stack is recommended.
 
 ## Production setup using docker swarm
 
+Docker swarm has major advantages over docker compose:
 
++ The compose yaml defines services, not containers
+    + These services are automatically restarted if they crash.
++ It allows usage of configs and secrets
+
+Because docker swarm tries to keep services in a desired state ('up' in the
+case of your galaxy services) it is very resilient against errors. If the
+server is randomly restarted, a container crashes due to gamma radiation or
+anything else, the docker swarm manager restarts the containers so your galaxy
+remains up. This is very convenient as *no manual intervention is needed*.
+
+Secrets are data that are encrypted and stored by docker. They can be mounted 
+as files in containers. Most containers allow setting of a `PASSWORD_FILE` 
+environment variable, so we do not need to keep the passwords in the 
+environment. For example we can set `PGPASSFILE=/run/secrets/db-password` 
+as an environment variable in our galaxy containers so galaxy can connect
+with our postgres database. Secrets make it very easy to not store passwords as
+plain text on your server.
+
+TODO: Write a full working docker swarm setup including secrets.
 
 ### Setting up configs and secrets
 WIP
@@ -200,3 +220,12 @@ were added by each layer. Thanks to dive the order of the `RUN` commands in the
 Dockerfile is more logical. Also it helped eliminate redundant files from the 
 container as well as showing which files did *not* end up in `/galaxy_storage/` 
 during runtime.
+
+Many thanks to the authors of the [docker-xwiki project](
+https://github.com/xwiki-contrib/docker-xwiki). It contains examples about
+docker swarm and this was my first contact with it. I set up an xwiki instance
+in our institute with the help of [this role](
+https://github.com/lumc/ansible-role-xwiki-docker). This was the 
+simplest ansible role I have ever written. The ease of deployment with 
+docker swarm for xwiki is what led to this project. I want to enable the same
+simplicity for galaxy.
