@@ -200,8 +200,8 @@ RUN cp config/migrated_tools_conf.xml.sample $GALAXY_CONFIG_MIGRATED_TOOLS_CONFI
     && sed -i "s|database/shed_tools|$GALAXY_SHED_TOOL_DIR|" $GALAXY_CONFIG_SHED_TOOL_CONFIG_FILE \
     && cp config/shed_tool_data_table_conf.xml.sample $GALAXY_CONFIG_SHED_TOOL_DATA_TABLE_CONFIG \
     && cp config/shed_data_manager_conf.xml.sample $GALAXY_CONFIG_SHED_DATA_MANAGER_CONFIG_FILE \
-    && cp tool-data/shared/ucsc/builds.txt.sample tool-data/shared/ucsc/builds.txt \
-    && cp tool-data/shared/ucsc/manual_builds.txt.sample tool-data/shared/ucsc/manual_builds.txt \
+    && cp tool-data/shared/ucsc/builds.txt.sample $GALAXY_CONFIG_TOOL_DATA_PATH/shared/ucsc/builds.txt \
+    && cp tool-data/shared/ucsc/manual_builds.txt.sample $GALAXY_CONFIG_TOOL_DATA_PATH/shared/ucsc/manual_builds.txt \
     && cp static/welcome.html.sample static/welcome.html
 
 ADD ./entrypoint.sh /usr/bin/entrypoint.sh
