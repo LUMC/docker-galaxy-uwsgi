@@ -2,11 +2,6 @@
 
 source $GALAXY_VIRTUAL_ENV/bin/activate
 
-if [[ $UWSGI_PROCESSES > 1 ]]
-    then THUNDERLOCK='--thunder-lock'
-    else THUNDERLOCK=''
-fi
-
 cd $GALAXY_INSTALL_DIR
 
 $GALAXY_VIRTUAL_ENV/bin/uwsgi \
@@ -17,7 +12,7 @@ $GALAXY_VIRTUAL_ENV/bin/uwsgi \
   --buffer-size 16384 \
   --py-call-osafterfork \
   --logdate \
-  $THUNDERLOCK \
+  --thunderlock \
   --master \
   --die-on-term \
   --http :8080 \
