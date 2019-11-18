@@ -12,7 +12,7 @@ $GALAXY_VIRTUAL_ENV/bin/uwsgi \
   --buffer-size 16384 \
   --py-call-osafterfork \
   --logdate \
-  --thunderlock \
+  --thunder-lock \
   --master \
   --die-on-term \
   --http :8080 \
