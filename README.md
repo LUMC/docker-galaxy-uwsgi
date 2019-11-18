@@ -33,18 +33,18 @@ tools etc.) attach a docker volume to the container:
 
 ```bash 
 docker volume create my_galaxy
-docker run -it -p 8080:8080 -v my_galaxy:/galaxy_data -e GALAXY_CONFIG_ADMIN_USERS=my_email@example.org lumc/galaxy-uwsgi
+docker run -it -p 8080:8080 -v my_galaxy:/var/lib/galaxy -e GALAXY_CONFIG_ADMIN_USERS=my_email@example.org lumc/galaxy-uwsgi
 ```
 
 Alternatively you can save Galaxy's state to your filesystem
 ```bash
-docker run -it -p 8080:8080 -v $HOME/galaxy:/galaxy_data -e GALAXY_CONFIG_ADMIN_USERS=my_email@example.org lumc/galaxy-uwsgi
+docker run -it -p 8080:8080 -v $HOME/galaxy:/var/lib/galaxy -e GALAXY_CONFIG_ADMIN_USERS=my_email@example.org lumc/galaxy-uwsgi
 ````
 
 To start the container as a daemon and not have the output on the command line 
 use the `-d` flag instead of the `-it` flags:
 ```bash
-docker run -d -p 8080:8080 -v my_galaxy:/galaxy_data -e GALAXY_CONFIG_ADMIN_USERS=my_email@example.org lumc/galaxy-uwsgi
+docker run -d -p 8080:8080 -v my_galaxy:/var/lib/galaxy -e GALAXY_CONFIG_ADMIN_USERS=my_email@example.org lumc/galaxy-uwsgi
 ```
 
 ### Ports
@@ -69,12 +69,12 @@ as shown in the quickstart. For production it is recommended to mount a
 
 For example:
 ```bash 
-docker run docker run -d -p 8080:8080 -v my_galaxy_config.yml:/opt/galaxy/config/galaxy.yml -v my_galaxy:/galaxy_data lumc/galaxy-uwsgi
+docker run docker run -d -p 8080:8080 -v my_galaxy_config.yml:/opt/galaxy/config/galaxy.yml -v my_galaxy:/var/lib/galaxy lumc/galaxy-uwsgi
 ```
 
 This container uses the defaults as much as possible, except for file paths. 
 These where adjusted to make sure all the generated data end up in 
-`/galaxy_data`.  All these settings where set using environment variables. 
+`/var/lib/galaxy`.  All these settings where set using environment variables. 
 `galaxy.yml` in this container is empty. Therefore it can be replaced easily
 by mounting a new configuration at `/opt/galaxy/config/galaxy.yml` without
 risk of breaking the container.
@@ -120,14 +120,14 @@ UWSGI_THREADS | 4 | The number of threads uwsgi can use.
 
 Directory | usage
 ---|---
-/galaxy_data | All data that is generated during the running of an instance is stored here.
-/galaxy_data/database | Contains the sqlite database, files, job_working directory and citations
-/galaxy_data/shed_tools | Contains all the installed shed_tools
-/galaxy_data/tool_data | Where indexes, reference sequences etc. are stored
-/galaxy_data/tool_test_data | Test data for tool tests
-/galaxy_data/mutable_config | Contains the config files that are updated on each tool install. Such as the tool panel information.
-/galaxy_data/tool_dependencies | Contains the conda prefix (`_conda`) and all the environments necessary for running tool shed tools.
-/galaxy_venv | Contains the galaxy virtual environment including all dependencies and optional dependencies
+/var/lib/galaxy | All data that is generated during the running of an instance is stored here.
+/var/lib/galaxy/database | Contains the sqlite database, files, job_working directory and citations
+/var/lib/galaxy/shed_tools | Contains all the installed shed_tools
+/var/lib/galaxy/tool_data | Where indexes, reference sequences etc. are stored
+/var/lib/galaxy/tool_test_data | Test data for tool tests
+/var/lib/galaxy/mutable_config | Contains the config files that are updated on each tool install. Such as the tool panel information.
+/var/lib/galaxy/tool_dependencies | Contains the conda prefix (`_conda`) and all the environments necessary for running tool shed tools.
+/opt/galaxy/venv | Contains the galaxy virtual environment including all dependencies and optional dependencies
 /opt/galaxy | Contains a checkout of the galaxy git repository
 /opt/galaxy/config | Where the static config files reside. You can mount your own configs such as galaxy.yml or job_conf.xml in this directory.
 /opt/galaxy/lib | The location of galaxy's library.

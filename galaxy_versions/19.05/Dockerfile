@@ -33,12 +33,13 @@ ARG GALAXY_VIRTUAL_ENV
 ENV GALAXY_VERSION=${GALAXY_RELEASE:-19.05} \
     GALAXY_UID=${GALAXY_UID:-1450} \
     GALAXY_USER=${GALAXY_USER:-galaxy} \
-    GALAXY_VIRTUAL_ENV=${GALAXY_VIRTUAL_ENV:-/galaxy_venv} \
-    EXPORT_DIR=${EXPORT_DIR:-/galaxy_data} \
+    EXPORT_DIR=${EXPORT_DIR:-/var/lib/galaxy} \
     GALAXY_INSTALL_DIR=/opt/galaxy \
     GALAXY_HOME=/home/galaxy \
     DEBIAN_FRONTEND=noninteractive
 
+# Galaxy virtualenv in /opt together with galaxy..
+ENV GALAXY_VIRTUAL_ENV=${GALAXY_VIRTUAL_ENV:-$GALAXY_INSTALL_DIR/venv}
 # Store the conda prefix on the persistent volume
 ENV GALAXY_CONFIG_DATA_DIR=$EXPORT_DIR/database
 ENV GALAXY_CONFIG_TOOL_DEPENDENCY_DIR=$EXPORT_DIR/tool_dependencies
@@ -49,7 +50,9 @@ RUN useradd --home-dir /home/galaxy --create-home \
     --shell /bin/bash --uid ${GALAXY_UID} galaxy \
     && rm -rf /var/log/*
 
-# Make sure all necessary folders are present and owned by the galaxy user.
+# Make sure all necessary folders are present and owned by the galaxy user. Remove folders from the galaxy install dir
+# as this gives errors while cloning. This removes the created venv folder. This makes sure the
+# galaxy virtualenv can be set in the build args.
 RUN mkdir -p $GALAXY_VIRTUAL_ENV $GALAXY_CONFIG_DATA_DIR $GALAXY_CONFIG_CONDA_PREFIX \
     $GALAXY_CONFIG_TOOL_DEPENDENCY_DIR $GALAXY_INSTALL_DIR $EXPORT_DIR \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_CONFIG_DATA_DIR \
@@ -57,7 +60,8 @@ RUN mkdir -p $GALAXY_VIRTUAL_ENV $GALAXY_CONFIG_DATA_DIR $GALAXY_CONFIG_CONDA_PR
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_VIRTUAL_ENV \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_CONFIG_CONDA_PREFIX \
     && chown $GALAXY_USER:$GALAXY_USER $GALAXY_INSTALL_DIR \
-    && chown $GALAXY_USER:$GALAXY_USER $EXPORT_DIR
+    && chown $GALAXY_USER:$GALAXY_USER $EXPORT_DIR \
+    && rm -rf $GALAXY_INSTALL_DIR/*
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -76,7 +80,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 USER $GALAXY_USER
 
-# Install Conda and create a virtualenv
+# Install Conda
 # we use conda clean -f flag to also remove the package cache for used packages
 # this has no deleterious effect since no packages in the base refer to the pkgs dir
 # Make sure all python files are compiled so it does not happen at runtime
@@ -90,9 +94,7 @@ RUN curl -s -L https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_6
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels conda-forge \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda install virtualenv \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda clean --all -f -y \
-    && ($GALAXY_CONFIG_CONDA_PREFIX/bin/python -m compileall $GALAXY_CONFIG_CONDA_PREFIX || exit 0) \
-    && $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
-    && rm -rf $GALAXY_HOME/.cache $GALAXY_VIRTUAL_ENV/src
+    && ($GALAXY_CONFIG_CONDA_PREFIX/bin/python -m compileall $GALAXY_CONFIG_CONDA_PREFIX || exit 0)
 
 # Clone galaxy to the install dir.
 # Remove the git dir as it is unnecessary
@@ -112,15 +114,16 @@ RUN git clone --depth=1 -b release_${GALAXY_VERSION} \
     $GALAXY_INSTALL_DIR/.gitignore $GALAXY_INSTALL_DIR/.travis.yml \
     $GALAXY_INSTALL_DIR/Makefile $GALAXY_INSTALL_DIR/pytest.ini \
     $GALAXY_INSTALL_DIR/tox.ini \
-    && $GALAXY_VIRTUAL_ENV/bin/python -m compileall $GALAXY_INSTALL_DIR/lib
+    && $GALAXY_CONFIG_CONDA_PREFIX/bin/python -m compileall $GALAXY_INSTALL_DIR/lib
 
 WORKDIR ${GALAXY_INSTALL_DIR}
 
-# Populate default environment with all of galaxy's dependencies.
+# Create default environment with all of galaxy's dependencies.
 # Also install nodeenv, npm and yarn in the GALAXY_VIRTUAL_ENV.
 # Again we compile all files that can be precompiled. This adds only very little (<200kb)
 # if anything to the layer.
-RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
+RUN $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
+    && bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
     -r requirements.txt \
     -r <(grep -v mysql lib/galaxy/dependencies/conditional-requirements.txt ) \
     --index-url https://wheels.galaxyproject.org/simple \
@@ -128,7 +131,7 @@ RUN bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
     && source $GALAXY_VIRTUAL_ENV/bin/activate \
     && $GALAXY_VIRTUAL_ENV/bin/nodeenv -n $(cat client/.node_version) -p \
     && $GALAXY_VIRTUAL_ENV/bin/npm install --global yarn" \
-    && rm -rf $GALAXY_VIRTUAL_ENV/src $GALAXY_HOME/.npm $GALAXY_HOME/.config \
+    && rm -rf $GALAXY_VIRTUAL_ENV/src $GALAXY_HOME/.npm $GALAXY_HOME/.config && rm -rf $GALAXY_HOME/.cache  \
     && ($GALAXY_VIRTUAL_ENV/bin/python -m compileall $GALAXY_VIRTUAL_ENV || exit 0)
 
 # Build the galaxy client

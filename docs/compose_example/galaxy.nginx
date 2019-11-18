@@ -29,7 +29,7 @@ server {
     set $galaxy_root /opt/galaxy;
 
     # serve framework static content
-    # This works because we put galaxy-root on a volume and mounted this read-only.
+    # This works because we put the static and plugin folders on volumes and mounted these read-only.
     location /static/style {
         alias $galaxy_root/static/style/blue;
         expires 24h;
