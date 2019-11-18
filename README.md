@@ -127,7 +127,7 @@ Directory | usage
 /var/lib/galaxy/tool_test_data | Test data for tool tests
 /var/lib/galaxy/mutable_config | Contains the config files that are updated on each tool install. Such as the tool panel information.
 /var/lib/galaxy/tool_dependencies | Contains the conda prefix (`_conda`) and all the environments necessary for running tool shed tools.
-/galaxy_venv | Contains the galaxy virtual environment including all dependencies and optional dependencies
+/opt/galaxy/venv | Contains the galaxy virtual environment including all dependencies and optional dependencies
 /opt/galaxy | Contains a checkout of the galaxy git repository
 /opt/galaxy/config | Where the static config files reside. You can mount your own configs such as galaxy.yml or job_conf.xml in this directory.
 /opt/galaxy/lib | The location of galaxy's library.
