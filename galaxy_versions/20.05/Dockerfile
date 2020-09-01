@@ -69,11 +69,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
     bzip2 \
+    nano \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/* \
-    /var/log/* /var/lib/dpkg/status /var/lib/dpkg/status-old \
-    /var/lib/dpkg/statoverride /var/lib/dpkg/statoverride-old \
-    /var/lib/apt/extended_states
+    /var/log/* /var/lib/apt/extended_states
 
 USER $GALAXY_USER
 
