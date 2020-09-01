@@ -5,6 +5,10 @@ Changelog
 Newest changes should be on top.
 -->
 
+Release 0.2.0
+-------------
++ Add a 20.05 version of the image.
+
 Release 0.1
 --------------
 + Always use uwsgi thunder-lock by default.
