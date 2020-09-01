@@ -154,9 +154,6 @@ ENV GALAXY_CONFIG_JOB_WORKING_DIRECTORY=$GALAXY_CONFIG_DATA_DIR/jobs_directory \
 
 ADD galaxy.yml config/galaxy.yml
 
-# Create the database. This only adds 3 mb to the container while drastically reducing start time.
-RUN bash create_db.sh
-
 # Make sure directories are present.
 RUN mkdir -p \
     $GALAXY_CONFIG_DATA_DIR \
@@ -173,13 +170,6 @@ RUN mkdir -p \
     $GALAXY_CONFIG_MANAGED_CONFIG_DIR \
     $GALAXY_SHED_TOOL_DIR
 
-ENV GALAXY_CONFIG_SHED_TOOL_CONFIG_FILE=$GALAXY_CONFIG_MANAGED_CONFIG_DIR/shed_tool_conf.xml
-ENV GALAXY_CONFIG_MIGRATED_TOOLS_CONFIG=$GALAXY_CONFIG_MANAGED_CONFIG_DIR/migrated_tools_conf.xml \
-    GALAXY_CONFIG_TOOL_CONFIG_FILE=config/tool_conf.xml,$GALAXY_CONFIG_SHED_TOOL_CONFIG_FILE \
-    GALAXY_CONFIG_SHED_TOOL_DATA_TABLE_CONFIG=$GALAXY_CONFIG_MANAGED_CONFIG_DIR/shed_tool_data_table_conf.xml \
-    GALAXY_CONFIG_SHED_DATA_MANAGER_CONFIG_FILE=$GALAXY_CONFIG_MANAGED_CONFIG_DIR/shed_data_manager_conf.xml \
-    GALAXY_CONFIG_INTEGRATED_TOOL_PANEL_CONFIG=$GALAXY_CONFIG_MANAGED_CONFIG_DIR/integrated_tool_panel.xml
-    
 # Miscellaneous galaxy settings to make proper use of this container in a
 # production setting. These settings are opinionated.
 ENV GALAXY_CONFIG_WATCH_TOOLS=True \
@@ -195,13 +185,7 @@ ENV UWSGI_PROCESSES=1 \
     UWSGI_THREADS=4
 
 # Make sure config files are present
-RUN cp config/migrated_tools_conf.xml.sample $GALAXY_CONFIG_MIGRATED_TOOLS_CONFIG \
-    && cp config/tool_conf.xml.sample config/tool_conf.xml \
-    && cp config/shed_tool_conf.xml.sample $GALAXY_CONFIG_SHED_TOOL_CONFIG_FILE \
-    && sed -i "s|database/shed_tools|$GALAXY_SHED_TOOL_DIR|" $GALAXY_CONFIG_SHED_TOOL_CONFIG_FILE \
-    && cp config/shed_tool_data_table_conf.xml.sample $GALAXY_CONFIG_SHED_TOOL_DATA_TABLE_CONFIG \
-    && cp config/shed_data_manager_conf.xml.sample $GALAXY_CONFIG_SHED_DATA_MANAGER_CONFIG_FILE \
-    && mkdir -p $GALAXY_CONFIG_TOOL_DATA_PATH/shared/ucsc/ \
+RUN mkdir -p $GALAXY_CONFIG_TOOL_DATA_PATH/shared/ucsc/ \
     && cp tool-data/shared/ucsc/builds.txt.sample $GALAXY_CONFIG_TOOL_DATA_PATH/shared/ucsc/builds.txt \
     && cp tool-data/shared/ucsc/manual_builds.txt.sample $GALAXY_CONFIG_TOOL_DATA_PATH/shared/ucsc/manual_builds.txt \
     && cp static/welcome.html.sample static/welcome.html
