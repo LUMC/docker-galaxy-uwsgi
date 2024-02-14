@@ -110,7 +110,7 @@ RUN git clone --depth=1 -b release_${GALAXY_VERSION} \
     $GALAXY_INSTALL_DIR/.gitignore $GALAXY_INSTALL_DIR/.travis.yml \
     $GALAXY_INSTALL_DIR/Makefile $GALAXY_INSTALL_DIR/pytest.ini \
     $GALAXY_INSTALL_DIR/tox.ini \
-    && $GALAXY_CONFIG_CONDA_PREFIX/bin/python -m compileall $GALAXY_INSTALL_DIR/lib
+    && ($GALAXY_CONFIG_CONDA_PREFIX/bin/python -m compileall $GALAXY_INSTALL_DIR/lib || exit 0)
 
 WORKDIR ${GALAXY_INSTALL_DIR}
 
