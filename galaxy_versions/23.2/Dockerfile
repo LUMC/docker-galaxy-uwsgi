@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 
 MAINTAINER r.h.p.vorderman@lumc.nl
 
@@ -30,7 +30,7 @@ ARG EXPORT_DIR
 ARG GALAXY_VIRTUAL_ENV
 
 # Installation settings
-ENV GALAXY_VERSION=${GALAXY_RELEASE:-20.05} \
+ENV GALAXY_VERSION=${GALAXY_RELEASE:-23.2} \
     GALAXY_UID=${GALAXY_UID:-1450} \
     GALAXY_USER=${GALAXY_USER:-galaxy} \
     EXPORT_DIR=${EXPORT_DIR:-/var/lib/galaxy} \
@@ -69,7 +69,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
     bzip2 \
-    nano \
+    nano-tiny \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/* \
     /var/log/* /var/lib/apt/extended_states
@@ -82,7 +82,7 @@ USER $GALAXY_USER
 # Make sure all python files are compiled so it does not happen at runtime.
 # Some files give syntax errors (notable the ones for python2 while compiling with python3)
 # This adds only 100 kb to the container.
-RUN curl -s -L https://repo.anaconda.com/miniconda/Miniconda3-py37_4.8.3-Linux-x86_64.sh > $GALAXY_HOME/miniconda.sh \
+RUN curl -s -L https://github.com/conda-forge/miniforge/releases/download/23.11.0-0/Miniforge3-23.11.0-0-Linux-x86_64.sh > $GALAXY_HOME/miniconda.sh \
     && bash $GALAXY_HOME/miniconda.sh -u -b -p $GALAXY_CONFIG_CONDA_PREFIX/ \
     && rm $GALAXY_HOME/miniconda.sh \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels defaults \
