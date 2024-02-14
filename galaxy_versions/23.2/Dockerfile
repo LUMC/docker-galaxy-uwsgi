@@ -182,7 +182,9 @@ RUN mkdir -p \
 ENV GALAXY_CONFIG_WATCH_TOOLS=True \
     GALAXY_CONFIG_WATCH_TOOL_DATA_DIR=True \
     GALAXY_CONFIG_CONDA_AUTO_INIT=False \
-    GALAXY_CONFIG_LOG_LEVEL=INFO
+    GALAXY_CONFIG_LOG_LEVEL=INFO \
+    GUNICORN_WORKERS=1 \
+    GUNICORN_THREADS=1
 
 # A sqlite database can only be written to by one thread at a time. So we have one uwsgi process.
 # Otherwise there will be errors.

@@ -1,26 +1,18 @@
 #!/usr/bin/env bash
+set -eu
 
 source $GALAXY_VIRTUAL_ENV/bin/activate
 
 cd $GALAXY_INSTALL_DIR
 
-$GALAXY_VIRTUAL_ENV/bin/uwsgi \
-  --enable-threads \
-  --processes $UWSGI_PROCESSES \
-  --threads $UWSGI_THREADS \
-  --offload-threads 1 \
-  --buffer-size 16384 \
-  --py-call-osafterfork \
-  --logdate \
-  --thunder-lock \
-  --master \
-  --die-on-term \
-  --http :8080 \
-  --socket :8000 \
+PYTHONPATH=lib GALAXY_CONFIG_FILE=/opt/galaxy/config/galaxy.yml \
+$GALAXY_VIRTUAL_ENV/bin/gunicorn \
+  'galaxy.webapps.galaxy.fast_factory:factory()' \
+  --timeout 300 \
   --pythonpath lib \
-  --virtualenv $GALAXY_VIRTUAL_ENV \
-  --module 'galaxy.webapps.galaxy.buildapp:uwsgi_app()' \
-  --static-map /static/style=static/style/blue \
-  --static-map /static=static \
-  --static-map /favicon.ico=static/favicon.ico \
-  --yaml config/galaxy.yml
+  -k galaxy.webapps.galaxy.workers.Worker \
+  -b :8080 \
+  --workers=$GUNICORN_WORKERS \
+  --threads=$GUNICORN_THREADS \
+  --config python:galaxy.web_stack.gunicorn_config \
+  --preload
