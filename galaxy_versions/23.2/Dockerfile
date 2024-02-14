@@ -82,13 +82,12 @@ USER $GALAXY_USER
 # Make sure all python files are compiled so it does not happen at runtime.
 # Some files give syntax errors (notable the ones for python2 while compiling with python3)
 # This adds only 100 kb to the container.
-RUN curl -s -L https://github.com/conda-forge/miniforge/releases/download/23.11.0-0/Miniforge3-23.11.0-0-Linux-x86_64.sh > $GALAXY_HOME/miniconda.sh \
+RUN curl -s -L https://repo.anaconda.com/miniconda/Miniconda3-py310_23.11.0-2-Linux-x86_64.sh > $GALAXY_HOME/miniconda.sh \
     && bash $GALAXY_HOME/miniconda.sh -u -b -p $GALAXY_CONFIG_CONDA_PREFIX/ \
     && rm $GALAXY_HOME/miniconda.sh \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels defaults \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels bioconda \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda config --add channels conda-forge \
-    && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda install virtualenv \
     && $GALAXY_CONFIG_CONDA_PREFIX/bin/conda clean --all -f -y \
     && ($GALAXY_CONFIG_CONDA_PREFIX/bin/python -m compileall $GALAXY_CONFIG_CONDA_PREFIX || exit 0)
 
@@ -118,16 +117,24 @@ WORKDIR ${GALAXY_INSTALL_DIR}
 # Also install nodeenv, npm and yarn in the GALAXY_VIRTUAL_ENV.
 # Again we compile all files that can be precompiled. This adds only very little (<200kb)
 # if anything to the layer.
-RUN $GALAXY_CONFIG_CONDA_PREFIX/bin/virtualenv $GALAXY_VIRTUAL_ENV \
+RUN $GALAXY_CONFIG_CONDA_PREFIX/bin/python -m venv $GALAXY_VIRTUAL_ENV \
     && bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
     -r requirements.txt \
-    -r <(grep -v mysql lib/galaxy/dependencies/conditional-requirements.txt ) \
     --index-url https://wheels.galaxyproject.org/simple \
     --extra-index-url https://pypi.python.org/simple \
     && source $GALAXY_VIRTUAL_ENV/bin/activate \
     && $GALAXY_VIRTUAL_ENV/bin/nodeenv -n $(cat client/.node_version) -p \
     && $GALAXY_VIRTUAL_ENV/bin/npm install --global yarn" \
     && rm -rf $GALAXY_VIRTUAL_ENV/src $GALAXY_HOME/.npm $GALAXY_HOME/.config && rm -rf $GALAXY_HOME/.cache  \
+    && ($GALAXY_VIRTUAL_ENV/bin/python -m compileall $GALAXY_VIRTUAL_ENV || exit 0)
+
+# Install conditional requirements
+RUN $GALAXY_CONFIG_CONDA_PREFIX/bin/python -m venv $GALAXY_VIRTUAL_ENV \
+    && bash -c "$GALAXY_VIRTUAL_ENV/bin/pip install --no-cache-dir \
+    -r <(grep -v mysql lib/galaxy/dependencies/conditional-requirements.txt | grep -v fs | grep -v tensorflow) \
+    --index-url https://wheels.galaxyproject.org/simple \
+    --extra-index-url https://pypi.python.org/simple " \
+    && rm -rf $GALAXY_VIRTUAL_ENV/src $GALAXY_HOME/.config && rm -rf $GALAXY_HOME/.cache  \
     && ($GALAXY_VIRTUAL_ENV/bin/python -m compileall $GALAXY_VIRTUAL_ENV || exit 0)
 
 # Build the galaxy client
